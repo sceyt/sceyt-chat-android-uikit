@@ -167,8 +167,9 @@ internal class PersistenceMessagesLogicImpl(
         incomingMessageMutex.withLock {
             saveMessagesToDb(arrayListOf(message))
 
-            messagesCache.add(channel.id, message)
-            onMessageFlow.tryEmit(data)
+            val resolvedMessage = withLocallyDeletedParent(message)
+            messagesCache.add(channel.id, resolvedMessage)
+            onMessageFlow.tryEmit(channel to resolvedMessage)
             updateMessageLoadRangeOnMessageEvent(message, null)
             channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
         }
@@ -177,6 +178,14 @@ internal class PersistenceMessagesLogicImpl(
             if (message.incoming && sendDeliveryMarker)
                 markMessagesAs(channel.id, Received, message.id)
         }
+    }
+
+    private suspend fun withLocallyDeletedParent(message: SceytMessage): SceytMessage {
+        val parentId = message.parentMessage?.id?.takeIf { it != 0L } ?: return message
+        val deletedParent = messageDao.getParentMessageById(parentId)
+            ?.takeIf { it.messageEntity.state == MessageState.Deleted }
+            ?.toSceytMessage() ?: return message
+        return message.copy(parentMessage = deletedParent.copy(attachments = emptyList()))
     }
 
     override suspend fun handlePush(data: PushData): Boolean = withContext(dispatcherIO) {
