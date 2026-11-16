@@ -69,15 +69,38 @@ internal class AttachmentUploadCoordinator(
         // Cancellation may happen while this command waits in the queue.
         if (task.isCancelled) return@dispatch
 
-        findMember(task)?.let { member ->
-            if (task.state == PauseUpload) {
-                pauseMember(member)
-                notify { onPaused(task) }
-            } else if (member.paused) resume(member)
-
+        val existingMember = findMember(task)
+        if (existingMember != null) {
+            handleExistingMember(existingMember, onPaused)
             // Reuse this task's existing member instead of registering it again.
             return@dispatch
         }
+
+        val member = registerMember(attachment, task, onResult) ?: return@dispatch
+
+        // Pause may arrive after upload() is called but before this command runs.
+        if (task.state == PauseUpload) {
+            member.paused = true
+            notify { onPaused(task) }
+            return@dispatch
+        }
+
+        startOrResumeUpload(member.upload)
+    }
+
+    private fun handleExistingMember(member: Member, onPaused: (TransferTask) -> Unit) {
+        val task = member.task
+        if (task.state == PauseUpload) {
+            pauseMember(member)
+            notify { onPaused(task) }
+        } else if (member.paused) resume(member)
+    }
+
+    private suspend fun registerMember(
+        attachment: SceytAttachment,
+        task: TransferTask,
+        onResult: (TransferTask, SceytResponse<String>) -> Unit,
+    ): Member? {
         val sharingKey = if (task.isSharedUpload) {
             attachment.originalFilePath.takeIfNotBlank()
                 ?: attachment.filePath.takeIfNotBlank()
@@ -99,15 +122,10 @@ internal class AttachmentUploadCoordinator(
             } catch (error: Throwable) {
                 removeMember(member)
                 complete(member, Result.failure(error))
-                return@dispatch
+                return null
             }
         }
-
-        // Pause may arrive after upload() is called but before this command runs.
-        if (task.state == PauseUpload) {
-            member.paused = true
-            notify { onPaused(task) }
-        } else startOrResumeUpload(upload)
+        return member
     }
 
     fun pause(task: TransferTask, onPaused: () -> Unit) = dispatch {
@@ -169,20 +187,12 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private fun startOrResumeUpload(upload: Upload) {
         if (!upload.hasActiveMembers || upload !in uploads) return
+        if (!takeUploadTurn(upload)) return
 
-        // Regular uploads take turns. Shared uploads can run alongside them.
-        if (!upload.shared && current !== upload) {
-            if (current != null) {
-                if (upload !in pending) pending.addLast(upload)
-                return
-            }
-            current = upload
-        }
-
-        upload.attempt?.let { attempt ->
+        val attempt = upload.attempt
+        if (attempt != null) {
             if (!attempt.paused) return
 
             // A completed attempt delivers its result through the command queue.
@@ -193,6 +203,24 @@ internal class AttachmentUploadCoordinator(
             stopAttempt(upload)
         }
 
+        launchUploadAttempt(upload)
+    }
+
+    private fun takeUploadTurn(upload: Upload): Boolean {
+        // Regular uploads take turns. Shared uploads can run alongside them.
+        if (upload.shared || current === upload) return true
+
+        if (current != null) {
+            if (upload !in pending) pending.addLast(upload)
+            return false
+        }
+
+        current = upload
+        return true
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun launchUploadAttempt(upload: Upload) {
         val owner = upload.members.values.firstOrNull { !it.paused } ?: return
         val previous = upload.attempt
         val attempt = Attempt(owner.attachment.uploadOperationId)

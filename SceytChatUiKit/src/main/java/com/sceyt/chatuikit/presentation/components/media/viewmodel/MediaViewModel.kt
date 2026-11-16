@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -46,6 +47,7 @@ class MediaViewModel(
     private val messageInteractor: MessageInteractor by inject()
     private val attachmentInteractor: AttachmentInteractor by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase by inject()
 
     val openedWithAttachment = openedAttachmentData?.attachment
 
@@ -348,6 +350,13 @@ class MediaViewModel(
                     )
                 }
             }
+        }
+    }
+
+    fun pauseOrResumeTransfer(item: MediaItem) {
+        val transferChannelId = channelId.takeIf { it != 0L }
+        viewModelScope.launch {
+            pauseOrResumeTransferUseCase(item.attachment, transferChannelId)
         }
     }
 

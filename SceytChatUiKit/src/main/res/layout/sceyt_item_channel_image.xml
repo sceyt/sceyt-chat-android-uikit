@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     android:contentDescription="@string/sceyt_cd_channel_image" xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="1dp">
@@ -18,6 +19,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@color/sceyt_color_background_secondary"/>
+
+    <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+        android:id="@+id/loadProgress"
+        android:contentDescription="@string/sceyt_cd_load_channel_file"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="2dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytUiProgressBackgroundColor="@color/sceyt_color_overlay_background_2"
+        app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+        app:sceytUiProgressIconSizeInPercent="60"
+        app:sceytUiProgressMinProgress="2"
+        app:sceytUiProgressTrackColor="@android:color/transparent"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

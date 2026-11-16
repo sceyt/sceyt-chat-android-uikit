@@ -101,6 +101,7 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     fun TransferTask.getProgressUpdateCallback() = ProgressUpdateCallback { transferData ->
+        var stateChanged = false
         val updatedAttachment = updateAttachmentAndStateIfValid(
             validate = validate@{ current ->
                 val isPausedDownload = current.transferState == TransferState.PauseDownload &&
@@ -115,6 +116,7 @@ object FileTransferHelper : SceytKoinComponent {
                 )
             },
             update = { current ->
+                stateChanged = current.transferState != transferData.state
                 current.copy(
                     transferState = transferData.state,
                     progressPercent = transferData.progressPercent
@@ -122,7 +124,7 @@ object FileTransferHelper : SceytKoinComponent {
             }
         ) ?: return@ProgressUpdateCallback
 
-        emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+        emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize, stateChanged)
         scope.launch {
             attachmentLogic.onTransferProgressPercentUpdated(transferData)
         }
@@ -166,7 +168,7 @@ object FileTransferHelper : SceytKoinComponent {
                 }
             ) ?: return@ResumePauseCallback
 
-            emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+            emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize, true)
             enqueueDbUpdate(messageTid) {
                 attachmentLogic.updateTransferDataByMsgTid(transferData)
             }
@@ -314,16 +316,26 @@ object FileTransferHelper : SceytKoinComponent {
         emitAttachmentTransferUpdate(transferData, attachment.fileSize)
     }
 
-    fun emitAttachmentTransferUpdate(transferData: TransferData, fileSize: Long? = null) {
+    fun emitAttachmentTransferUpdate(transferData: TransferData, fileSize: Long? = null) =
+        emitAttachmentTransferUpdate(transferData, fileSize, stateChanged = false)
+
+    private fun emitAttachmentTransferUpdate(
+        transferData: TransferData,
+        fileSize: Long?,
+        stateChanged: Boolean,
+    ) {
         val data = fileSize?.let {
             val size = getFilePrettySizes(it, transferData.progressPercent)
             transferData.copy(fileLoadedSize = size.first, fileTotalSize = size.second)
         } ?: transferData
         val acceptedData = AttachmentTransferStateStore.put(data) ?: return
 
-        if (acceptedData.state == TransferState.Downloading || acceptedData.state == TransferState.Uploading) {
+        val isProgressUpdate = !stateChanged &&
+                (acceptedData.state == TransferState.Downloading || acceptedData.state == TransferState.Uploading)
+        if (isProgressUpdate) {
             onTransferUpdatedLiveData_.postValue(acceptedData)
         } else {
+            // State changes must reach every attachment even when progress updates arrive together.
             scope.launch(Dispatchers.Main.immediate) {
                 onTransferUpdatedLiveData_.value = acceptedData
             }

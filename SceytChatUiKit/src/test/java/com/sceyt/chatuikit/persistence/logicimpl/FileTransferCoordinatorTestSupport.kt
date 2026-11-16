@@ -1,5 +1,8 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
@@ -16,6 +19,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -246,4 +251,12 @@ internal fun attachment(
 
 internal fun transferTask(attachment: SceytAttachment): TransferTask {
     return TransferTask(attachment, attachment.messageTid, attachment.transferState)
+}
+
+internal fun Context.setValidatedNetwork() {
+    val connectivityManager = getSystemService(ConnectivityManager::class.java)
+    val capabilities = ShadowNetworkCapabilities.newInstance()
+    shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, capabilities)
 }

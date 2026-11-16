@@ -48,6 +48,9 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
@@ -69,14 +72,17 @@ class UploadAndSendAttachmentWorker(
     private val resumePausedUpload: Boolean
         get() = inputData.getBoolean(RESUME_PAUSED_UPLOAD, false) && runAttemptCount == 0
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = coroutineScope {
         val messageTid = inputData.getLong(MESSAGE_TID, 0)
+        // Start foreground setup now without delaying this worker's place in the upload queue.
+        launch(start = CoroutineStart.UNDISPATCHED) { startForeground(messageTid) }
+
         val isSharing =
             inputData.getBoolean(IS_SHARING, false) || fileTransferService.getTasks().values.any {
                 it.messageTid == messageTid && it.isSharedUpload
             }
 
-        return if (isSharing) {
+        if (isSharing) {
             uploadAndSend(true)
         } else {
             uploadLock.withLock {
@@ -288,9 +294,6 @@ class UploadAndSendAttachmentWorker(
         if (message.isNotPending())
             return finishWorkWithSuccess()
 
-        if (applicationContext.hasPermissions(android.Manifest.permission.FOREGROUND_SERVICE))
-            startForeground(message.channelId, message)
-
         val result = uploadAttachmentsBeforeSend(
             message = message,
             isSharing = isSharing,
@@ -369,8 +372,15 @@ class UploadAndSendAttachmentWorker(
         return result
     }
 
-    private suspend fun startForeground(channelId: Long, message: SceytMessage) {
-        val notification = createNotification(channelId, message) ?: return
+    private suspend fun startForeground(messageTid: Long) {
+        if (!applicationContext.hasPermissions(android.Manifest.permission.FOREGROUND_SERVICE))
+            return
+
+        val message = messageLogic.getMessageFromDbByTid(messageTid) ?: return
+        if (message.isNotPending())
+            return
+
+        val notification = createNotification(message.channelId, message) ?: return
         val foregroundInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             ForegroundInfo(
                 FILE_TRANSFER_NOTIFICATION_ID,
