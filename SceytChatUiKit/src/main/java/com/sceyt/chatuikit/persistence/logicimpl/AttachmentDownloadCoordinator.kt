@@ -169,7 +169,7 @@ internal class AttachmentDownloadCoordinator(
 
                 val transfer = download?.transfer
                 if (transfer != null)
-                    transfer.discard()
+                    transfer.cancel()
                 else router.discardSavedDownload(attachment)
             }
         }
