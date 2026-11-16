@@ -60,6 +60,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelCoordinat
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.message.PendingSendRegistry
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.SystemMessageSenderImpl
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
@@ -83,6 +84,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RefreshPinnedMessageCacheUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPinUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendUnpinUseCase
@@ -203,6 +205,7 @@ internal val interactorModule = module {
 
 internal val logicModule = module {
     singleOf(::PendingChannelCoordinator)
+    singleOf(::PendingSendRegistry)
     singleOf(::PersistenceChannelsLogicImpl) bind PersistenceChannelsLogic::class
     singleOf(::PersistenceMessagesLogicImpl) bind PersistenceMessagesLogic::class
     singleOf(::PersistenceAttachmentLogicImpl) bind PersistenceAttachmentLogic::class
@@ -228,6 +231,7 @@ internal val useCaseModule = module {
     factory { PinMessageUseCase(get(), get(), get()) }
     factory { UnpinMessageUseCase(get(), get(), get()) }
     factory { StorePinsUseCase(get(), get(), get(), get()) }
+    factory { SendPendingMessagesUseCase(get(), get()) }
     factory { SendPendingPinsUseCase(get(), get(), get()) }
     factory { SendPinUseCase(get(), get(), get(), get(), get()) }
     factory { SendUnpinUseCase(get(), get(), get()) }

@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
@@ -135,6 +136,7 @@ internal class PersistenceMessagesLogicImplLoadNearTest {
         checkDeletedMessagesUseCase = mock<CheckDeletedMessagesUseCase>(),
         channelSyncStateStore = mock<ChannelSyncStateStore>(),
         pendingMessageDeleteByTidDao = mock<PendingMessageDeleteByTidDao>(),
+        sendPendingMessagesUseCase = mock<SendPendingMessagesUseCase>(),
     )
 
     private fun message(id: Long, createdAt: Long): SceytMessage {

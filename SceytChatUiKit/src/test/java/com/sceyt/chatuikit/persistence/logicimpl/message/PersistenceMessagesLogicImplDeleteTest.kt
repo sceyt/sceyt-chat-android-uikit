@@ -184,5 +184,6 @@ internal class PersistenceMessagesLogicImplDeleteTest {
         messageLoadRangeUpdater = mock(),
         checkDeletedMessagesUseCase = mock(),
         channelSyncStateStore = mock(),
+        sendPendingMessagesUseCase = mock(),
     )
 }
