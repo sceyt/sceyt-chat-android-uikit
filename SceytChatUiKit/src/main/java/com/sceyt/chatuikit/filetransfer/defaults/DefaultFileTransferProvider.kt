@@ -4,6 +4,7 @@ import android.content.Context
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.fold
+import com.sceyt.chatuikit.extensions.hasConnectedNetwork
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferProvider
@@ -21,6 +22,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import java.io.File
+import java.io.IOException
 
 class DefaultFileTransferProvider : FileTransferProvider, SceytKoinComponent {
     private val appContext by inject<Context>()
@@ -110,7 +112,13 @@ class DefaultFileTransferProvider : FileTransferProvider, SceytKoinComponent {
     override suspend fun download(
         request: FileDownloadRequest,
         callback: FileTransferCallback,
-    ): FileTransferResult<String> = downloader.download(request, callback)
+    ): FileTransferResult<String> {
+        // Keep offline attempts retryable without starting native networking.
+        if (!appContext.hasConnectedNetwork())
+            return FileTransferResult.Interrupted(IOException("No network connection"))
+
+        return downloader.download(request, callback)
+    }
 
     private fun SceytResponse<String>.toUploadResult(): FileTransferResult<String> = fold(
         onSuccess = { url ->

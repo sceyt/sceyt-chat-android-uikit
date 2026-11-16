@@ -41,6 +41,7 @@ class FileTransferScopeIsolationTest {
     fun setUp() {
         stopKoin()
         context = RuntimeEnvironment.getApplication()
+        context.setValidatedNetwork()
         destinationFile = File(context.cacheDir, "scope-isolation-tests/download.bin")
         destinationFile.parentFile?.mkdirs()
         destinationFile.delete()

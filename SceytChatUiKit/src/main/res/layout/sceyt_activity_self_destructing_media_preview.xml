@@ -23,13 +23,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        app:auto_show="true"
-        app:controller_layout_id="@layout/sceyt_player_control_view"
-        app:repeat_toggle_modes="none"
         app:resize_mode="fit"
-        app:show_timeout="0"
         app:surface_type="texture_view"
-        app:use_controller="true" />
+        app:use_controller="false" />
+
+    <com.sceyt.chatuikit.presentation.custom_views.MediaVideoControllerView
+        android:id="@+id/videoController"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/sceyt_cd_video_time"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <FrameLayout
         android:id="@+id/messageBodyContainer"

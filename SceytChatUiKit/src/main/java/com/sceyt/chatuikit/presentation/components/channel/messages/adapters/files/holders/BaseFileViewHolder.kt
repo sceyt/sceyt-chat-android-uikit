@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
+import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
@@ -71,9 +72,18 @@ abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
         return needThumbFor()?.value == data?.key
     }
 
+    internal fun refreshTransferState() {
+        if (!::fileItem.isInitialized) return
+        val previous = fileItem.transferData?.copy()
+        fileItem.applyLatestTransferState(needThumbFor(), getThumbSize())
+        val latest = fileItem.transferData ?: return
+        if (latest != previous) updateState(latest)
+    }
+
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
         loadingProgressViewWithStyle?.let { (loader, style) ->
-            loader.getProgressWithState(data.state, style, true, data.progressPercent)
+            val hideOnThumbLoaded = fileItem.transferData?.state?.isCompleted() != false
+            loader.getProgressWithState(data.state, style, hideOnThumbLoaded, data.progressPercent)
         }
     }
 
