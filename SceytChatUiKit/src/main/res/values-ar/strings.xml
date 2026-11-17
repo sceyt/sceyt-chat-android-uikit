@@ -6,10 +6,12 @@
     <string name="sceyt_file_transfer_notifications_channel_name">تحميل المرفقات</string>
     <string name="sceyt_search_for_channels">ابحث عن القنوات</string>
     <string name="sceyt_search">بحث</string>
+    <string name="sceyt_global_search_hint">بحث</string>
     <string name="sceyt_your_last_message">أنت</string>
     <string name="sceyt_copy">نسخ</string>
     <string name="sceyt_no_channels">لا توجد محادثات بعد</string>
     <string name="sceyt_message">رسالة</string>
+    <string name="sceyt_messages">الرسائل</string>
     <string name="sceyt_online">متصل الآن</string>
     <string name="sceyt_members_count">%1$s أعضاء</string>
     <string name="sceyt_member_count">%1$s عضو</string>
@@ -142,7 +144,11 @@
     <string name="sceyt_forward">إعادة توجيه</string>
     <string name="sceyt_saved">تم الحفظ</string>
     <string name="sceyt_share">مشاركة</string>
+    <string name="sceyt_show_in_chat">عرض في الدردشة</string>
     <string name="sceyt_media_cannot_save_to_gallery">تعذر حفظ الملف في المعرض. تحقق من الأذونات واسمح للتطبيق بالوصول إلى التخزين</string>
+    <string name="sceyt_media_save_failed">تعذّر الحفظ في المعرض</string>
+    <string name="sceyt_storage_full_title">مساحة التخزين ممتلئة</string>
+    <string name="sceyt_media_save_storage_full">لا يمكن حفظ هذا الملف لأن مساحة التخزين في جهازك ممتلئة.</string>
     <string name="sceyt_deleted_user">مستخدم محذوف</string>
     <string name="sceyt_share_with">مشاركة مع</string>
     <string name="sceyt_write_a_message">اكتب رسالة…</string>
@@ -224,6 +230,7 @@
     <string name="sceyt_waiting_for_network_title">في انتظار الشبكة…</string>
     <string name="sceyt_connecting_title">جارٍ الاتصال…</string>
     <string name="sceyt_chats">الدردشات</string>
+    <string name="sceyt_channels">القنوات</string>
     <string name="sceyt_message_self_destructed">تدمير ذاتي للرسالة</string>
     <string name="sceyt_no_media_title">لا توجد وسائط</string>
     <string name="sceyt_no_media_desc">ستظهر الوسائط المشتركة هنا.</string>
@@ -268,6 +275,15 @@
     <string name="sceyt_send">إرسال</string>
     <string name="sceyt_retract_vote">سحب الصوت</string>
     <string name="sceyt_end_vote">إنهاء التصويت</string>
+    <string name="sceyt_pin">تثبيت</string>
+    <string name="sceyt_unpin">إلغاء التثبيت</string>
+    <string name="sceyt_pin_for_all">تثبيت للجميع</string>
+    <string name="sceyt_pin_for_me">تثبيت لي</string>
+    <string name="sceyt_pinned_message">الرسائل المثبتة</string>
+    <string name="sceyt_pinned_messages">الرسائل المثبتة</string>
+    <string name="sceyt_no_pinned_messages">لا توجد رسائل مثبتة</string>
+    <string name="sceyt_pinned_poll">استطلاع: %1$s</string>
+    <string name="sceyt_pinned_voice">%1$s: %2$s</string>
     <string name="poll_results">نتائج الاستطلاع</string>
     <string name="sceyt_show_all">إظهار الكل</string>
     <string name="sceyt_end">إنهاء</string>
@@ -289,6 +305,13 @@
     <string name="sceyt_joined_via_invite_link">%1$s انضم عبر رابط الدعوة</string>
     <string name="sceyt_disappearing_message_set">%1$s ضبط الرسائل المختفية إلى %2$s</string>
     <string name="sceyt_disappearing_message_disabled">%1$s أوقف الرسائل المختفية</string>
+    <string name="sceyt_pinned_notification">ثبّت</string>
+    <string name="sceyt_pinned_a_message">%1$s ثبّت رسالة</string>
+    <string name="sceyt_pinned_body">%1$s ثبّت: \"%2$s\"</string>
+    <string name="sceyt_pinned_voice_message">%1$s ثبّت رسالة صوتية</string>
+    <string name="sceyt_pinned_photo_message">%1$s ثبّت صورة</string>
+    <string name="sceyt_pinned_video_message">%1$s ثبّت فيديو</string>
+    <string name="sceyt_pinned_file_message">%1$s ثبّت ملفًا</string>
     <string name="sceyt_and">و</string>
     <string name="sceyt_unknown_duration">مدة غير معروفة</string>
     <string name="sceyt_read_more">قراءة المزيد</string>
@@ -310,5 +333,7 @@
     <string name="sceyt_pause">إيقاف مؤقت</string>
     <string name="sceyt_stop">إيقاف</string>
     <string name="sceyt_zoom">تكبير</string>
+    <string name="sceyt_error_forward_original_message_deleted">لا يمكن إعادة التوجيه لأن الرسالة الأصلية قد حُذفت</string>
+    <string name="sceyt_forward_some_messages_deleted">تم حذف بعض الرسائل ولن تتم إعادة توجيهها</string>
 
 </resources>

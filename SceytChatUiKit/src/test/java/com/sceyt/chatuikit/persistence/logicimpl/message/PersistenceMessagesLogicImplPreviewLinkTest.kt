@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoa
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
@@ -101,7 +102,9 @@ class PersistenceMessagesLogicImplPreviewLinkTest {
         whenever(workManager.beginUniqueWork(eq(TID.toString()), eq(ExistingWorkPolicy.KEEP), any<OneTimeWorkRequest>()))
             .thenReturn(continuation)
         WorkManagerImpl.setDelegate(workManager)
-        whenever(messageDao.getPendingMessages(CHANNEL_ID)).thenReturn(listOf(uploadedVideoMessageWithPreview()))
+        val pending = uploadedVideoMessageWithPreview()
+        whenever(messageDao.getPendingMessages(CHANNEL_ID)).thenReturn(listOf(pending))
+        whenever(messageDao.getPendingMessageByTid(TID)).thenReturn(pending)
         whenever(repository.sendMessage(any(), any())).thenReturn(SceytResponse.Error())
 
         logic().sendPendingMessages(CHANNEL_ID)
@@ -167,6 +170,11 @@ class PersistenceMessagesLogicImplPreviewLinkTest {
         messageLoadRangeUpdater = mock(),
         checkDeletedMessagesUseCase = mock(),
         channelSyncStateStore = mock(),
+        sendPendingMessagesUseCase = SendPendingMessagesUseCase(
+            messageDao = messageDao,
+            registry = PendingSendRegistry(),
+            isConnected = { true },
+        ),
     )
 
     private companion object {

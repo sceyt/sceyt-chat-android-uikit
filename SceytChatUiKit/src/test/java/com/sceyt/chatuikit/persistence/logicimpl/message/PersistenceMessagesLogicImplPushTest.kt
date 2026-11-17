@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.createMessage
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinApp
@@ -36,13 +37,16 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.toParentMessageEntity
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.push.PushData
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
@@ -98,6 +102,58 @@ internal class PersistenceMessagesLogicImplPushTest {
         stopKoin()
         SceytLog.setLogger(SceytLogLevel.Verbose, SceytLoggerImpl())
         SceytChatUIKit.config = SceytChatUIKitConfig()
+    }
+
+    @Test
+    fun `onMessage emits locally deleted parent instead of incoming attachment preview`() = runBlocking {
+        val data = pushData(messageId = 2, parentId = PARENT_ID)
+        val parent = requireNotNull(data.message.parentMessage).copy(
+            type = "file",
+            user = SceytUser("me"),
+            attachments = listOf(
+                SceytAttachment(
+                    id = 1, messageId = PARENT_ID, messageTid = PARENT_ID, userId = "me",
+                    name = "report.pdf", type = "file", metadata = null,
+                    fileSize = 100, createdAt = 1, url = "https://example.test/report.pdf",
+                    filePath = null, transferState = null, progressPercent = null,
+                    originalFilePath = null, linkPreviewDetails = null
+                )
+            )
+        )
+        val deletedParent = parent.copy(state = MessageState.Deleted, body = "", attachments = emptyList())
+        stubPersistenceForPushes(data)
+        whenever(messageDao.upsertMessages(any())).thenReturn(emptyList())
+        whenever(messageDao.getParentMessageById(PARENT_ID)).thenReturn(deletedParent.toParentMessageEntity())
+        val logic = logic()
+        val event = async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(1_000.milliseconds) { logic.getOnMessageFlow().first() }
+        }
+
+        logic.onMessage(data.channel to data.message.copy(parentMessage = parent), sendDeliveryMarker = false)
+
+        val cached = argumentCaptor<SceytMessage>()
+        verify(messagesCache).add(eq(CHANNEL_ID), cached.capture())
+        val emitted = event.await()
+        assertThat(emitted.first.id).isEqualTo(CHANNEL_ID)
+        listOf(cached.firstValue, emitted.second).forEach { message ->
+            assertThat(message.parentMessage?.id).isEqualTo(PARENT_ID)
+            assertThat(message.parentMessage?.state).isEqualTo(MessageState.Deleted)
+            assertThat(message.parentMessage?.attachments.orEmpty()).isEmpty()
+        }
+    }
+
+    @Test
+    fun `onMessage keeps incoming parent when parent missing in db`() = runBlocking {
+        val data = pushData(messageId = 2, parentId = PARENT_ID)
+        stubPersistenceForPushes(data)
+        whenever(messageDao.upsertMessages(any())).thenReturn(emptyList())
+        whenever(messageDao.getParentMessageById(PARENT_ID)).thenReturn(null)
+
+        logic().onMessage(data.channel to data.message, sendDeliveryMarker = false)
+
+        val cached = argumentCaptor<SceytMessage>()
+        verify(messagesCache).add(eq(CHANNEL_ID), cached.capture())
+        assertThat(cached.firstValue.parentMessage).isSameInstanceAs(data.message.parentMessage)
     }
 
     @Test
@@ -243,6 +299,7 @@ internal class PersistenceMessagesLogicImplPushTest {
         checkDeletedMessagesUseCase = mock<CheckDeletedMessagesUseCase>(),
         channelSyncStateStore = mock<ChannelSyncStateStore>(),
         pendingMessageDeleteByTidDao = mock<PendingMessageDeleteByTidDao>(),
+        sendPendingMessagesUseCase = mock<SendPendingMessagesUseCase>(),
     )
 
     private fun pushData(messageId: Long, parentId: Long? = null): PushData {

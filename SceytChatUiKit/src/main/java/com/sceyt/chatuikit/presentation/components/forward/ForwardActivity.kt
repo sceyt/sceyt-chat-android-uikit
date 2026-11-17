@@ -6,39 +6,45 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
 import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
+import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.forward.viewmodel.ForwardViewModel
+import com.sceyt.chatuikit.presentation.components.forward.viewmodel.ForwardViewModelFactory
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.styles.extensions.common.applyStyle
 import com.sceyt.chatuikit.styles.forward.ForwardStyle
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 open class ForwardActivity : ShareableActivity<ForwardStyle>() {
     protected lateinit var binding: SceytActivityForwardBinding
-    protected val viewModel: ForwardViewModel by viewModels()
-    protected var forwardMessages: List<SceytMessage>? = null
+    protected val viewModel: ForwardViewModel by viewModels {
+        ForwardViewModelFactory(getMessagesFromIntent())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBarsStyle()
-        setContentView(SceytActivityForwardBinding.inflate(layoutInflater)
+        setContentView(
+            SceytActivityForwardBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
         applyInsetsAndWindowColor(binding.root)
 
-        getDataFromIntent()
+        initViewModel()
         binding.initViews()
         binding.applyStyle()
     }
@@ -47,8 +53,22 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
         return ForwardStyle.Builder(this, null).build()
     }
 
-    protected open fun getDataFromIntent() {
-        forwardMessages = requireNotNull(intent?.parcelableArrayList(FORWARD_MESSAGES_KEY))
+    protected open fun getMessagesFromIntent(): List<SceytMessage> {
+        return requireNotNull(intent?.parcelableArrayList(FORWARD_MESSAGES_KEY))
+    }
+
+    protected open fun initViewModel() {
+        viewModel.forwardMessages
+            .drop(1)
+            .onEach(::onForwardMessagesDeleted)
+            .launchIn(lifecycleScope)
+    }
+
+    protected open fun onForwardMessagesDeleted(remaining: List<SceytMessage>) {
+        val messageRes = if (remaining.isEmpty())
+            R.string.sceyt_error_forward_original_message_deleted
+        else R.string.sceyt_forward_some_messages_deleted
+        customToastSnackBar(getString(messageRes))
     }
 
     protected open fun SceytActivityForwardBinding.initViews() {
@@ -62,7 +82,10 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
         toolbar.setQueryChangeListener(::onSearchQueryChanged)
 
         btnForward.setSafeOnClickListener {
-            onForwardClick(true)
+            if (viewModel.forwardMessages.value.isEmpty())
+                customToastSnackBar(getString(R.string.sceyt_error_forward_original_message_deleted))
+            else
+                onForwardClick(true)
         }
     }
 
@@ -78,7 +101,7 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
         viewModel.sendForwardMessage(
             channelIds = selectedChannels.toLongArray(),
             markOwnMessageAsForwarded = markOwnMessageAsForwarded,
-            messages = forwardMessages ?: emptyList()
+            messages = viewModel.forwardMessages.value
         ).onEach {
             when (it) {
                 ForwardViewModel.State.Loading -> {

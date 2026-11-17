@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewTransferHolder
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
+import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -90,7 +91,7 @@ class MediaViewModel(
 
     private fun loadInitial() {
         val attachment = openedWithAttachment
-        if (attachment == null || attachment.id == null || attachment.id == 0L) {
+        if (attachment?.id == null || attachment.id == 0L) {
             loadPrevAttachments(
                 lastAttachmentId = 0,
                 isLoadingMore = false,
@@ -362,6 +363,13 @@ class MediaViewModel(
 
     suspend fun getMessageById(messageId: Long): SceytMessage? {
         return messageInteractor.getMessageFromDbById(messageId)
+    }
+
+    /**
+     * Returns the message for [messageId] from the local DB, or null when it is missing or deleted.
+     */
+    suspend fun getForwardableMessage(messageId: Long): SceytMessage? {
+        return getMessageById(messageId)?.takeIf { !it.state.isDeletedOrHardDeleted() }
     }
 
     private fun logTargetPosition(
