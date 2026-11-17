@@ -11,9 +11,7 @@ import com.sceyt.chatuikit.data.models.channels.stringToEnum
 import com.sceyt.chatuikit.extensions.toBoolean
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
-    return if (isGroup) {
-        !userRole.isNullOrEmpty()
-    } else true
+    return !isGroup || !userRole.isNullOrEmpty()
 }
 
 fun SceytChannel.isPeerDeleted(): Boolean {
@@ -35,7 +33,7 @@ fun SceytChannel.getPeer(): SceytMember? {
         members.firstOrNull { it.id == myId } ?: members.firstOrNull()
     } else {
         val others = members.filter { it.id != myId }
-        others.firstOrNull { it.id.isNotBlank() } ?: others.firstOrNull()
+        others.firstOrNull { it.id.isNotBlank() } ?: others.firstOrNull() ?: members.firstOrNull()
     }
 }
 
