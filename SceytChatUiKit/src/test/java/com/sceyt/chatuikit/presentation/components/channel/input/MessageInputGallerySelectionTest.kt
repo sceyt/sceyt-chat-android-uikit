@@ -4,21 +4,34 @@ import android.net.Uri
 import androidx.activity.ComponentActivity
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.attachment.Attachment
+import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.channels.DraftAttachment
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentsAdapter
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Answers
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadows.ShadowToast
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
@@ -127,6 +140,102 @@ class MessageInputGallerySelectionTest {
             controller.pause().stop().destroy()
         }
     }
+
+    @Test
+    fun `resume check removes attachments whose files were deleted and saves draft`() {
+        withInputView { input, activity ->
+            val kept = File(activity.filesDir, "kept.jpg").apply { writeText("kept") }
+            val deleted = File(activity.filesDir, "deleted.jpg").apply { writeText("deleted") }
+            val callback = mock<MessageInputActionCallback>()
+            input.setInputActionsCallback(callback)
+            input.addAttachment(
+                AttachmentTypeEnum.Image to kept.path,
+                AttachmentTypeEnum.Image to deleted.path,
+            )
+            deleted.delete()
+            assertThat(ShadowToast.shownToastCount()).isEqualTo(0)
+
+            runBlocking { input.removeMissingAttachments() }
+
+            assertThat(input.attachmentPaths()).containsExactly(kept.path)
+            val draftAttachments = argumentCaptor<List<Attachment>>()
+            verify(callback, atLeastOnce()).updateDraftMessage(
+                anyOrNull(), draftAttachments.capture(), anyOrNull(), any(), anyOrNull(), anyOrNull(), any()
+            )
+            assertThat(draftAttachments.lastValue.map { it.filePath }).containsExactly(kept.path)
+            assertThat(ShadowToast.shownToastCount()).isEqualTo(1)
+            assertThat(ShadowToast.getTextOfLatestToast())
+                .isEqualTo(activity.getString(R.string.sceyt_missing_attachments_removed))
+        }
+    }
+
+    @Test
+    fun `resume check with all files present shows no toast`() {
+        withInputView { input, activity ->
+            val kept = File(activity.filesDir, "kept.jpg").apply { writeText("kept") }
+            input.addAttachment(AttachmentTypeEnum.Image to kept.path)
+
+            runBlocking { input.removeMissingAttachments() }
+
+            assertThat(input.attachmentPaths()).containsExactly(kept.path)
+            assertThat(ShadowToast.shownToastCount()).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun `draft restore drops missing attachments with one missing files toast`() {
+        withInputView { input, activity ->
+            val kept = File(activity.filesDir, "kept.jpg").apply { writeText("kept") }
+            val missing = File(activity.filesDir, "missing.jpg")
+            val missingVideo = File(activity.filesDir, "missing.mp4")
+            input.setDraftMessage(
+                DraftMessage(
+                    channelId = 1,
+                    body = null,
+                    createdAt = 0,
+                    mentionUsers = null,
+                    replyOrEditMessage = null,
+                    isReply = false,
+                    bodyAttributes = null,
+                    attachments = listOf(
+                        DraftAttachment(1, kept.path, AttachmentTypeEnum.Image),
+                        DraftAttachment(1, missing.path, AttachmentTypeEnum.Image),
+                        DraftAttachment(1, missingVideo.path, AttachmentTypeEnum.Video),
+                    ),
+                    voiceAttachment = null,
+                    viewOnce = false,
+                )
+            )
+
+            assertThat(input.attachmentPaths()).containsExactly(kept.path)
+            assertThat(ShadowToast.shownToastCount()).isEqualTo(1)
+            assertThat(ShadowToast.getTextOfLatestToast())
+                .isEqualTo(activity.getString(R.string.sceyt_missing_attachments_removed))
+        }
+    }
+
+    private fun withInputView(block: (MessageInputView, ComponentActivity) -> Unit) {
+        val controller = Robolectric.buildActivity(ComponentActivity::class.java).create()
+        val clientWrapper = Mockito.mockStatic(ClientWrapper::class.java)
+        clientWrapper.`when`<Long> { ClientWrapper.generateTid() }.thenReturn(1L)
+        try {
+            val activity = controller.get()
+            activity.setTheme(androidx.appcompat.R.style.Theme_AppCompat_Light_NoActionBar)
+            val input = MessageInputView(activity)
+            activity.setContentView(input)
+            controller.start().resume()
+            block(input, activity)
+        } finally {
+            clientWrapper.close()
+            controller.pause().stop().destroy()
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun MessageInputView.attachmentPaths(): List<String> =
+        (MessageInputView::class.java.getDeclaredField("allAttachments").apply {
+            isAccessible = true
+        }.get(this) as List<Attachment>).map { it.filePath }
 
     private fun applyGalleryResult(
         attachments: MutableList<Attachment>,
