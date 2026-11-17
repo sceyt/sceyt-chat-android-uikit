@@ -3,10 +3,12 @@
     <string name="sceyt_search_for_channels">Rechercher des canals</string>
     <string name="sceyt_chat_notifications_channel_name">Messages de Discussion</string>
     <string name="sceyt_search">Rechercher</string>
+    <string name="sceyt_global_search_hint">Rechercher</string>
     <string name="sceyt_your_last_message">You</string>
     <string name="sceyt_copy">Copier</string>
     <string name="sceyt_no_channels">Pas de canaux</string>
     <string name="sceyt_message">Message</string>
+    <string name="sceyt_messages">Messages</string>
     <string name="sceyt_online">en ligne</string>
     <string name="sceyt_members_count">%1$s membres</string>
     <string name="sceyt_member_count">%1$s membre</string>
@@ -131,7 +133,11 @@
     <string name="sceyt_forward">transférer</string>
     <string name="sceyt_saved">enregistrée</string>
     <string name="sceyt_share">partager</string>
+    <string name="sceyt_show_in_chat">Afficher dans la discussion</string>
     <string name="sceyt_media_cannot_save_to_gallery">Impossible d’enregistrer le fichier dans la galerie. Vérifier l’autorisation et autoriser l’application à accéder au stockage</string>
+    <string name="sceyt_media_save_failed">Impossible d\'enregistrer dans la galerie</string>
+    <string name="sceyt_storage_full_title">Stockage plein</string>
+    <string name="sceyt_media_save_storage_full">Ce fichier ne peut pas être enregistré car le stockage de votre appareil est plein.</string>
     <string name="sceyt_deleted_user">utilisateur supprimé</string>
     <string name="sceyt_share_with">partager avec</string>
     <string name="sceyt_write_a_message">écrire un message…</string>
@@ -237,6 +243,7 @@
     <string name="sceyt_connecting_title">Connexion en cours…</string>
     <string name="sceyt_disconnected_title">Déconnecté</string>
     <string name="sceyt_chats">Discussions</string>
+    <string name="sceyt_channels">Canaux</string>
     <string name="sceyt_recording">enregistrement</string>
     <string name="sceyt_recording_">enregistrement…</string>
     <string name="sceyt_invite_link">Lien d\'invitation</string>
@@ -269,6 +276,15 @@
     <string name="sceyt_send">Envoyer</string>
     <string name="sceyt_retract_vote">Retirer le vote</string>
     <string name="sceyt_end_vote">Terminer le vote</string>
+    <string name="sceyt_pin">Épingler</string>
+    <string name="sceyt_unpin">Désépingler</string>
+    <string name="sceyt_pin_for_all">Épingler pour tous</string>
+    <string name="sceyt_pin_for_me">Épingler pour moi</string>
+    <string name="sceyt_pinned_message">Messages épinglés</string>
+    <string name="sceyt_pinned_messages">Messages épinglés</string>
+    <string name="sceyt_no_pinned_messages">Aucun message épinglé</string>
+    <string name="sceyt_pinned_poll">Sondage : %1$s</string>
+    <string name="sceyt_pinned_voice">%1$s : %2$s</string>
     <string name="poll_results">Résultats du sondage</string>
     <string name="sceyt_show_all">Tout afficher</string>
     <string name="sceyt_end">Terminer</string>
@@ -290,6 +306,13 @@
     <string name="sceyt_joined_via_invite_link">%1$s a rejoint via le lien d\'invitation</string>
     <string name="sceyt_disappearing_message_set">%1$s a défini les messages éphémères sur %2$s</string>
     <string name="sceyt_disappearing_message_disabled">%1$s a désactivé les messages éphémères</string>
+    <string name="sceyt_pinned_notification">a épinglé</string>
+    <string name="sceyt_pinned_a_message">%1$s a épinglé un message</string>
+    <string name="sceyt_pinned_body">%1$s a épinglé : \"%2$s\"</string>
+    <string name="sceyt_pinned_voice_message">%1$s a épinglé un message vocal</string>
+    <string name="sceyt_pinned_photo_message">%1$s a épinglé une photo</string>
+    <string name="sceyt_pinned_video_message">%1$s a épinglé une vidéo</string>
+    <string name="sceyt_pinned_file_message">%1$s a épinglé un fichier</string>
     <string name="sceyt_and">et</string>
     <string name="sceyt_unknown_duration">Durée inconnue</string>
     <string name="sceyt_read_more">Lire la suite</string>
@@ -311,4 +334,5 @@
     <string name="sceyt_pause">Pause</string>
     <string name="sceyt_stop">Arrêter</string>
     <string name="sceyt_zoom">Zoom</string>
+    <string name="sceyt_error_forward_original_message_deleted">Impossible de transférer car le message d\'origine a été supprimé</string>
 </resources>

@@ -431,14 +431,15 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     protected open fun forward(item: MediaItem) {
         lifecycleScope.launch {
-            viewModel.getMessageById(item.data.attachment.messageId)?.let { message ->
-                SceytChatUIKit.navigator.navigate(
-                    context = this@MediaPreviewActivity,
-                    destination = Destination.Forward(message)
-                )
-            } ?: run {
-                customToastSnackBar("Couldn't forward this message")
+            val message = viewModel.getForwardableMessage(item.data.attachment.messageId)
+            if (message == null) {
+                customToastSnackBar(getString(R.string.sceyt_error_forward_original_message_deleted))
+                return@launch
             }
+            SceytChatUIKit.navigator.navigate(
+                context = this@MediaPreviewActivity,
+                destination = Destination.Forward(message)
+            )
         }
     }
 

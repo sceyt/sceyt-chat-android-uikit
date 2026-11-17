@@ -535,18 +535,21 @@ class MessageListViewModel(
         pagingResponseReceived(response)
     }
 
-    fun sendPendingMessages() {
-        viewModelScope.launch(Dispatchers.IO) {
-            messageInteractor.sendPendingMessages(conversationId)
-        }
-    }
-
     fun prepareToEditMessage(message: SceytMessage) {
         _inputCommands.tryEmit(MessageInputCommand.Edit(message))
     }
 
     fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
         messageActionBridge.showMessageActions(event.message)
+    }
+
+    internal fun dropFromSelection(tids: List<Long>) {
+        val removed = tids.filter { selectedMessagesMap.remove(it) != null }
+        if (removed.isEmpty()) return
+        if (selectedMessagesMap.isEmpty())
+            messageActionBridge.cancelMultiSelectMode()
+        else
+            messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
     }
 
     fun prepareToShowSearchMessage(event: MessageCommandEvent.SearchMessages) {
