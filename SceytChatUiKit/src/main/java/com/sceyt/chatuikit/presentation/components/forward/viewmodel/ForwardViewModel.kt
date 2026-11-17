@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.forward.viewmodel
 
+import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Message.MessageBuilder
@@ -9,16 +10,48 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.newPoll
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toPollDetails
+import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import org.koin.core.component.inject
 
-class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
+class ForwardViewModel @JvmOverloads constructor(
+    messages: List<SceytMessage> = emptyList(),
+) : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor by inject<MessageInteractor>()
+
+    private val _forwardMessages = MutableStateFlow(messages)
+
+    /**
+     * Messages to forward. Ones deleted for everyone or hard deleted are removed.
+     */
+    val forwardMessages: StateFlow<List<SceytMessage>> = _forwardMessages.asStateFlow()
+
+    init {
+        merge(
+            MessagesCache.messageUpdatedFlow.map { (channelId, updated) ->
+                channelId to updated.filter { it.state.isDeletedOrHardDeleted() }.map { it.tid }
+            },
+            MessagesCache.messagesHardDeletedFlow,
+        ).onEach { (channelId, tIds) ->
+            _forwardMessages.update { list ->
+                list.filterNot { it.channelId == channelId && it.tid in tIds }
+            }
+        }.launchIn(viewModelScope)
+    }
 
     fun sendForwardMessage(
         vararg channelIds: Long,

@@ -334,4 +334,5 @@
     <string name="sceyt_stop">Stop</string>
     <string name="sceyt_zoom">Zoom</string>
     <string name="sceyt_error_forward_original_message_deleted">Can\'t forward because the original message has been deleted</string>
+    <string name="sceyt_forward_some_messages_deleted">Some messages were deleted and won\'t be forwarded</string>
 </resources>

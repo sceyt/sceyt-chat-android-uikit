@@ -335,4 +335,5 @@
     <string name="sceyt_stop">Arrêter</string>
     <string name="sceyt_zoom">Zoom</string>
     <string name="sceyt_error_forward_original_message_deleted">Impossible de transférer car le message d\'origine a été supprimé</string>
+    <string name="sceyt_forward_some_messages_deleted">Certains messages ont été supprimés et ne seront pas transférés</string>
 </resources>
