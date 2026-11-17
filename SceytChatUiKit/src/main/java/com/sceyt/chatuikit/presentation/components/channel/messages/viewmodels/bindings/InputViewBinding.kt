@@ -1,8 +1,10 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings
 
 import android.text.Editable
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
@@ -86,6 +88,12 @@ fun MessageListViewModel.bind(
                 viewOnceSelected = it.draftMessage?.viewOnce == true
                 messageInputView.setDraftMessage(it.draftMessage)
             }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            messageInputView.removeMissingAttachments()
         }
     }
 

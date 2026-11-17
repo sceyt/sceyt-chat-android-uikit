@@ -115,6 +115,7 @@
     <string name="sceyt_gallery">المعرض</string>
     <string name="sceyt_this_unsupported_file_format">تنسيق الملف غير مدعوم</string>
     <string name="sceyt_unsupported_file_format">تنسيق الملف غير مدعوم</string>
+    <string name="sceyt_missing_attachments_removed">تمت إزالة بعض المرفقات لأن الملفات لم تعد موجودة</string>
     <string name="sceyt_you_can_select_max">يمكنك تحديد حد أقصى %s</string>
     <string name="sceyt_video">فيديو</string>
     <string name="sceyt_image">صورة</string>
