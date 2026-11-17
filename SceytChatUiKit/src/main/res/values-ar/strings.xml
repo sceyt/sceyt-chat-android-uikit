@@ -334,5 +334,6 @@
     <string name="sceyt_stop">إيقاف</string>
     <string name="sceyt_zoom">تكبير</string>
     <string name="sceyt_error_forward_original_message_deleted">لا يمكن إعادة التوجيه لأن الرسالة الأصلية قد حُذفت</string>
+    <string name="sceyt_forward_some_messages_deleted">تم حذف بعض الرسائل ولن تتم إعادة توجيهها</string>
 
 </resources>
