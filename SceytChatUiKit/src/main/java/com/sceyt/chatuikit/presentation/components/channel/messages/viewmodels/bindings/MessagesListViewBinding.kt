@@ -632,6 +632,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .filter { (channelId, _) -> channelId == channel.id }
         .onEach { (_, tIds) ->
             messagesListView.forceDeleteMessageByTid(*tIds.toLongArray())
+            dropFromSelection(tIds)
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     loadMessagesFlow
@@ -782,7 +783,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             val message = initMessageInfoData(sceytMessage)
             withContext(Dispatchers.Main) {
                 when {
-                    message.state == MessageState.Deleted || message.state == MessageState.Edited -> {
+                    message.state == MessageState.Deleted -> {
+                        messagesListView.messageEditedOrDeleted(updateMessage = message)
+                        if (selectedMessagesMap.containsKey(message.tid)) {
+                            messagesListView.updateMessageSelection(message.copy(isSelected = false))
+                            dropFromSelection(listOf(message.tid))
+                        }
+                    }
+
+                    message.state == MessageState.Edited -> {
                         messagesListView.messageEditedOrDeleted(updateMessage = message)
                     }
 

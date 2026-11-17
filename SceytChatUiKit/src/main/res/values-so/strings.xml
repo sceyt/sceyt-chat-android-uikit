@@ -3,10 +3,12 @@
     <string name="sceyt_search_for_channels">Raadi kannaalo</string>
     <string name="sceyt_chat_notifications_channel_name">Fariimaha wada sheekaysiga</string>
     <string name="sceyt_search">Raadi</string>
+    <string name="sceyt_global_search_hint">Raadi</string>
     <string name="sceyt_your_last_message">Adiga</string>
     <string name="sceyt_copy">Copy</string>
     <string name="sceyt_no_channels">No Channels</string>
     <string name="sceyt_message">Fariin</string>
+    <string name="sceyt_messages">Fariimaha</string>
     <string name="sceyt_online">Online</string>
     <string name="sceyt_members_count">%1$s members</string>
     <string name="sceyt_member_count">%1$s member</string>
@@ -131,7 +133,11 @@
     <string name="sceyt_forward">Forward</string>
     <string name="sceyt_saved">Saved</string>
     <string name="sceyt_share">Share</string>
+    <string name="sceyt_show_in_chat">Ku tus wada sheekaysiga</string>
     <string name="sceyt_media_cannot_save_to_gallery">Cannot save file to gallery. Check permission and allow app to access storage</string>
+    <string name="sceyt_media_save_failed">Lama kaydin karo galleriga</string>
+    <string name="sceyt_storage_full_title">Kaydku waa buuxaa</string>
+    <string name="sceyt_media_save_storage_full">Faylkan lama kaydin karo sababtoo ah kaydka qalabkaagu waa buuxaa.</string>
     <string name="sceyt_deleted_user">Deleted User</string>
     <string name="sceyt_share_with">Share with</string>
     <string name="sceyt_write_a_message">Write a message</string>
@@ -237,6 +243,7 @@
     <string name="sceyt_connecting_title">Connecting…</string>
     <string name="sceyt_disconnected_title">Disconnected</string>
     <string name="sceyt_chats">Chats</string>
+    <string name="sceyt_channels">Kanaalada</string>
     <string name="sceyt_recording">recording</string>
     <string name="sceyt_recording_">recording…</string>
     <string name="sceyt_invite_link">Invite link</string>
@@ -269,6 +276,15 @@
     <string name="sceyt_send">Send</string>
     <string name="sceyt_retract_vote">Retract vote</string>
     <string name="sceyt_end_vote">End vote</string>
+    <string name="sceyt_pin">Dheji</string>
+    <string name="sceyt_unpin">Ka qaad dhejinta</string>
+    <string name="sceyt_pin_for_all">U dheji dhammaan</string>
+    <string name="sceyt_pin_for_me">Ii dheji</string>
+    <string name="sceyt_pinned_message">Fariimaha la dhejiyay</string>
+    <string name="sceyt_pinned_messages">Fariimaha La Dhejiyay</string>
+    <string name="sceyt_no_pinned_messages">Ma jiraan fariimo la dhejiyay</string>
+    <string name="sceyt_pinned_poll">Codbixin: %1$s</string>
+    <string name="sceyt_pinned_voice">%1$s: %2$s</string>
     <string name="poll_results">Poll results</string>
     <string name="sceyt_show_all">Show All</string>
     <string name="sceyt_end">End</string>
@@ -290,6 +306,13 @@
     <string name="sceyt_joined_via_invite_link">%1$s joined via invite link</string>
     <string name="sceyt_disappearing_message_set">%1$s set disappearing messages to %2$s</string>
     <string name="sceyt_disappearing_message_disabled">%1$s disabled disappearing messages</string>
+    <string name="sceyt_pinned_notification">dhejiyay</string>
+    <string name="sceyt_pinned_a_message">%1$s ayaa dhejiyay fariin</string>
+    <string name="sceyt_pinned_body">%1$s ayaa dhejiyay: \"%2$s\"</string>
+    <string name="sceyt_pinned_voice_message">%1$s ayaa dhejiyay fariin cod ah</string>
+    <string name="sceyt_pinned_photo_message">%1$s ayaa dhejiyay sawir</string>
+    <string name="sceyt_pinned_video_message">%1$s ayaa dhejiyay muuqaal</string>
+    <string name="sceyt_pinned_file_message">%1$s ayaa dhejiyay fayl</string>
     <string name="sceyt_and">and</string>
     <string name="sceyt_unknown_duration">Unknown duration</string>
     <string name="sceyt_read_more">Read More</string>
@@ -311,4 +334,5 @@
     <string name="sceyt_pause">Pause</string>
     <string name="sceyt_stop">Stop</string>
     <string name="sceyt_zoom">Zoom</string>
+    <string name="sceyt_error_forward_original_message_deleted">Lama gudbin karo, fariinta asalka ah waa la tirtiray</string>
 </resources>
