@@ -97,6 +97,7 @@ class FileTransferServiceImplTest {
         shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, capabilities)
         previousFileTransfer = SceytChatUIKit.fileTransfer
         service.cancelAllTransfers()
+        AttachmentTransferStateStore.clear()
         reset(uploader)
         WorkManagerImpl.setDelegate(workManager)
         val continuation = mock<WorkContinuation>()
@@ -692,11 +693,11 @@ class FileTransferServiceImplTest {
         assertThat(request.firstValue.tags).contains("456")
         assertThat(request.firstValue.tags).contains(attachment.messageTid.toString())
         val inputData = request.firstValue.workSpec.input
-        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isFalse()
     }
 
     @Test
-    fun `user resume after restart schedules explicit resume with the channel tag`() = runBlocking {
+    fun `user resume after restart schedules upload with the channel tag`() = runBlocking {
         val attachment = attachment(state = TransferState.PauseUpload)
         assertThat(service.findTransferTask(attachment)).isNull()
         val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service)
@@ -710,7 +711,7 @@ class FileTransferServiceImplTest {
         assertThat(request.firstValue.tags).contains("456")
         assertThat(request.firstValue.tags).contains(attachment.messageTid.toString())
         val inputData = request.firstValue.workSpec.input
-        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isFalse()
     }
 
     @Test
@@ -740,7 +741,8 @@ class FileTransferServiceImplTest {
             eq(attachment.messageTid.toString()), eq(ExistingWorkPolicy.REPLACE), request.capture(),
         )
         val inputData = request.firstValue.workSpec.input
-        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false))
+            .isEqualTo(transferState == TransferState.ErrorUpload)
         verify(uploader, never()).upload(any(), any(), any(), any())
     }
 

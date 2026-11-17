@@ -322,8 +322,6 @@
     <string name="view_once_messages_title">View once messages</string>
     <string name="view_once_messages_desc">Any photo, video, or voice message you send will disappear from the chat after it\'s been opened. To keep your content private, recipients won\'t be able to share, forward, copy, save, or take screenshots.</string>
     <string name="sceyt_ok">Ok</string>
-
-    <!-- Camera Activity -->
     <string name="sceyt_camera_error">Camera initialization failed</string>
     <string name="sceyt_switch_camera">Switch Camera</string>
     <string name="sceyt_toggle_flash">Toggle Flash</string>
@@ -335,4 +333,6 @@
     <string name="sceyt_pause">Pause</string>
     <string name="sceyt_stop">Stop</string>
     <string name="sceyt_zoom">Zoom</string>
+    <string name="sceyt_error_forward_original_message_deleted">Can\'t forward because the original message has been deleted</string>
+    <string name="sceyt_forward_some_messages_deleted">Some messages were deleted and won\'t be forwarded</string>
 </resources>

@@ -12,6 +12,7 @@ import androidx.work.ListenableWorker
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
+import androidx.work.WorkContinuation
 import androidx.work.WorkInfo
 import androidx.work.WorkerParameters
 import androidx.work.impl.WorkManagerImpl
@@ -256,6 +257,78 @@ class UploadAndSendAttachmentWorkerTest {
             releasePreparation.complete(Unit)
             firstWork.cancelAndJoin()
             secondWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `queued upload resumes once after its worker restarts`() = runBlocking {
+        val first = localAttachment()
+        val queued = first.copy(messageTid = 11L, transferState = TransferState.WaitingToUpload)
+        val channelId = 456L
+        val saveResume = CompletableDeferred<Unit>()
+        var savedState = queued.transferState
+        whenever(attachmentLogic.updateTransferDataByMsgTid(any())).doSuspendableAnswer {
+            val data = it.getArgument<TransferData>(0)
+            if (data.messageTid == queued.messageTid) {
+                if (data.state == TransferState.WaitingToUpload) saveResume.await()
+                savedState = data.state
+            }
+        }
+
+        val workName = queued.messageTid.toString()
+        val continuation = mock<WorkContinuation>()
+        whenever(workManager.beginUniqueWork(eq(workName), eq(ExistingWorkPolicy.REPLACE), any<OneTimeWorkRequest>()))
+            .thenReturn(continuation)
+        whenever(continuation.enqueue()).thenReturn(mock<Operation>())
+        val request = argumentCaptor<OneTimeWorkRequest>()
+
+        val firstWork = testScope.async { worker(first).doWork() }
+        val queuedWork = testScope.async { worker(queued, channelId = channelId).doWork() }
+        val restartedWork = testScope.async(start = CoroutineStart.LAZY) {
+            val inputData = request.firstValue.workSpec.input
+            worker(
+                queued.copy(transferState = savedState),
+                resume = inputData.getBoolean(RESUME_PAUSED_UPLOAD, false),
+                runAttemptCount = 1,
+                channelId = channelId,
+            ).doWork()
+        }
+        try {
+            service.pause(queued.messageTid, queued, TransferState.WaitingToUpload)
+            assertThat(savedState).isEqualTo(TransferState.PauseUpload)
+            val paused = queued.copy(transferState = savedState)
+
+            service.resume(paused.messageTid, paused, TransferState.PauseUpload, channelId)
+            service.resume(paused.messageTid, paused, TransferState.PauseUpload, channelId)
+            assertThat(AttachmentTransferStateStore.getTransferData(queued)?.state)
+                .isEqualTo(TransferState.WaitingToUpload)
+            verify(continuation, never()).enqueue()
+
+            saveResume.complete(Unit)
+            assertThat(savedState).isEqualTo(TransferState.WaitingToUpload)
+            verify(workManager).beginUniqueWork(eq(workName), eq(ExistingWorkPolicy.REPLACE), request.capture())
+            verify(continuation).enqueue()
+            queuedWork.cancelAndJoin()
+            restartedWork.start()
+
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid).isEqualTo(first.messageTid)
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(transport.uploadCalls.map { it.request.attachment.messageTid })
+                .containsExactly(first.messageTid, queued.messageTid).inOrder()
+
+            val upload = transport.uploadCalls.last()
+            upload.progress(30f)
+            val progress = AttachmentTransferStateStore.getTransferData(queued)
+            assertThat(progress?.state).isEqualTo(TransferState.Uploading)
+            assertThat(progress?.progressPercent).isEqualTo(30f)
+            upload.succeed("resumed-url")
+            assertThat(restartedWork.isCompleted).isTrue()
+            assertSentUrl(queued, "resumed-url", channelId)
+        } finally {
+            saveResume.complete(Unit)
+            restartedWork.cancelAndJoin()
+            queuedWork.cancelAndJoin()
+            firstWork.cancelAndJoin()
         }
     }
 

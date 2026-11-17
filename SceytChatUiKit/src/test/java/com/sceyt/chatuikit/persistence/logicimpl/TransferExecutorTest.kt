@@ -5,10 +5,14 @@ import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -80,26 +84,86 @@ class TransferExecutorTest {
     }
 
     @Test
-    fun `discard requested before preparation runs cleanup when it is registered`() {
-        var cleaned = false
+    fun `cancel before execution cleans up the selected provider`() = runTest {
         val executor = TransferExecutor("upload:42", provider) { _, _ -> FileTransferResult.Success("url") }
 
-        executor.discard()
-        assertThat(cleaned).isFalse()
-        executor.onDiscard { cleaned = true }
+        executor.cancel()
 
-        assertThat(cleaned).isTrue()
+        verify(provider).cancel("upload:42")
     }
 
     @Test
-    fun `discard runs an already registered cleanup`() {
-        var cleaned = false
-        val executor = TransferExecutor("upload:42", provider) { _, _ -> FileTransferResult.Success("url") }
-        executor.onDiscard { cleaned = true }
-        assertThat(cleaned).isFalse()
+    fun `cancel waits for the running provider to stop before cleanup`() = runTest {
+        val releaseStop = CompletableDeferred<Unit>()
+        val executor = TransferExecutor("upload:42", provider) { transfer, _ ->
+            transfer.executeTransport {
+                try {
+                    awaitCancellation()
+                } finally {
+                    withContext(NonCancellable) { releaseStop.await() }
+                }
+            }
+        }
+        executor.start(this, previous = null) { executor.execute {} }
+        runCurrent()
 
-        executor.discard()
+        val cancellation = launch { executor.cancel() }
+        runCurrent()
+        verifyNoInteractions(provider)
+        releaseStop.complete(Unit)
+        cancellation.join()
 
-        assertThat(cleaned).isTrue()
+        verify(provider).cancel("upload:42")
+    }
+
+    @Test
+    fun `cancel during startup waits for the previous execution without starting another upload`() = runTest {
+        val releaseStop = CompletableDeferred<Unit>()
+        val previous = TransferExecutor("upload:42", provider) { _, _ -> FileTransferResult.Success("url") }
+        previous.start(this, previous = null) {
+            try {
+                awaitCancellation()
+            } finally {
+                withContext(NonCancellable) { releaseStop.await() }
+            }
+        }
+        runCurrent()
+        previous.stop()
+        var uploads = 0
+        val replacement = TransferExecutor("upload:42", provider) { _, _ ->
+            uploads++
+            FileTransferResult.Success("url")
+        }
+        replacement.start(this, previous) { replacement.execute {} }
+        runCurrent()
+
+        val cancellation = launch { replacement.cancel() }
+        runCurrent()
+        verifyNoInteractions(provider)
+        releaseStop.complete(Unit)
+        cancellation.join()
+
+        assertThat(uploads).isEqualTo(0)
+        verify(provider).cancel("upload:42")
+    }
+
+    @Test
+    fun `a replacement owner cleans up the previous provider before starting`() = runTest {
+        val previousProvider = mock<FileTransferProvider>()
+        val previous = TransferExecutor("upload:41", previousProvider) { _, _ -> FileTransferResult.Success("url") }
+        previous.start(this, previous = null) { awaitCancellation() }
+        runCurrent()
+        previous.stop()
+        val replacement = TransferExecutor("upload:42", provider) { _, _ -> FileTransferResult.Success("url") }
+        var started = false
+
+        replacement.start(this, previous) {
+            verify(previousProvider).cancel("upload:41")
+            started = true
+        }
+        runCurrent()
+
+        assertThat(started).isTrue()
+        verifyNoInteractions(provider)
     }
 }

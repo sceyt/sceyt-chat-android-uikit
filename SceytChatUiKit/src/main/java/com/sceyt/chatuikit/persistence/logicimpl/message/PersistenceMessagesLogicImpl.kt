@@ -78,6 +78,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
@@ -141,7 +142,8 @@ internal class PersistenceMessagesLogicImpl(
     private val channelCache: ChannelsCache,
     private val messageLoadRangeUpdater: MessageLoadRangeUpdater,
     private val checkDeletedMessagesUseCase: CheckDeletedMessagesUseCase,
-    private val channelSyncStateStore: ChannelSyncStateStore
+    private val channelSyncStateStore: ChannelSyncStateStore,
+    private val sendPendingMessagesUseCase: SendPendingMessagesUseCase
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
@@ -162,13 +164,13 @@ internal class PersistenceMessagesLogicImpl(
         data: Pair<SceytChannel, SceytMessage>,
         sendDeliveryMarker: Boolean,
     ): Unit = withContext(dispatcherIO) {
-        val channel = data.first
-        val message = data.second
+        val (channel, message) = data
         incomingMessageMutex.withLock {
             saveMessagesToDb(arrayListOf(message))
 
-            messagesCache.add(channel.id, message)
-            onMessageFlow.tryEmit(data)
+            val resolvedMessage = withLocallyDeletedParent(message)
+            messagesCache.add(channel.id, resolvedMessage)
+            onMessageFlow.tryEmit(channel to resolvedMessage)
             updateMessageLoadRangeOnMessageEvent(message, null)
             channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
         }
@@ -177,6 +179,14 @@ internal class PersistenceMessagesLogicImpl(
             if (message.incoming && sendDeliveryMarker)
                 markMessagesAs(channel.id, Received, message.id)
         }
+    }
+
+    private suspend fun withLocallyDeletedParent(message: SceytMessage): SceytMessage {
+        val parentId = message.parentMessage?.id?.takeIf { it != 0L } ?: return message
+        val deletedParent = messageDao.getParentMessageById(parentId)
+            ?.takeIf { it.messageEntity.state == MessageState.Deleted }
+            ?.toSceytMessage() ?: return message
+        return message.copy(parentMessage = deletedParent.copy(attachments = emptyList()))
     }
 
     override suspend fun handlePush(data: PushData): Boolean = withContext(dispatcherIO) {
@@ -823,47 +833,34 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun sendPendingMessages(channelId: Long) = withContext(dispatcherIO) {
-        val pendingMessages = messageDao.getPendingMessages(channelId)
-        if (pendingMessages.isEmpty()) return@withContext
-
         val channel = channelCache.getOneOf(channelId)
             ?: persistenceChannelsLogic.getChannelFromDb(channelId)
+        val pendingChannel = channel?.takeIf { it.pending }
 
-        if (channel?.pending == true) {
-            pendingMessages.forEach { messageDb ->
+        val hadPendingMessages = sendPendingMessagesUseCase(
+            channelId = channelId,
+            skipPausedUploads = pendingChannel == null
+        ) { messageDb, isUploadedForward ->
+            if (pendingChannel != null) {
                 createChannelAndSendMessageWithLock(
-                    pendingChannel = channel,
+                    pendingChannel = pendingChannel,
                     message = messageDb.toSceytMessage(),
                     isPendingMessage = true,
                     isUploadedAttachments = false
                 ).collect()
-            }
-            if (!createChannelAndSendMessageMutex.isLocked)
-                channelCache.removeFromPendingToRealChannelsData(channelId)
-        } else {
-            pendingMessages.forEach { messageDb ->
-                // If have attachments, we need to check maybe the upload was paused,
-                // if so, we don't need to send message until upload is finished
-                if (messageDb.attachments.isNullOrEmpty() || messageDb.attachments.any { attachment ->
-                        attachment.payLoad?.transferState != TransferState.PauseUpload
-                    }) {
-                    val isForwarded = messageDb.messageEntity.forwardingDetailsDb != null
-                    val areTrackedAttachmentsUploaded = messageDb.attachments?.all { attachment ->
-                        val isTracked = isTransferTrackedType(attachment.attachmentEntity.type)
-                        val isUploaded = attachment.payLoad?.transferState == TransferState.Uploaded
-                        !isTracked || isUploaded
-                    } == true
-                    val isUploadedForward = isForwarded && areTrackedAttachmentsUploaded
-                    sendMessageImpl(
-                        channelId = channelId,
-                        message = messageDb.toSceytMessage(),
-                        isSharing = false,
-                        isPendingMessage = true,
-                        isUploadedAttachments = isUploadedForward
-                    ).collect()
-                }
+            } else {
+                sendMessageImpl(
+                    channelId = channelId,
+                    message = messageDb.toSceytMessage(),
+                    isSharing = false,
+                    isPendingMessage = true,
+                    isUploadedAttachments = isUploadedForward
+                ).collect()
             }
         }
+
+        if (hadPendingMessages && pendingChannel != null && !createChannelAndSendMessageMutex.isLocked)
+            channelCache.removeFromPendingToRealChannelsData(channelId)
     }
 
     override suspend fun sendAllPendingMessages() = withContext(dispatcherIO) {

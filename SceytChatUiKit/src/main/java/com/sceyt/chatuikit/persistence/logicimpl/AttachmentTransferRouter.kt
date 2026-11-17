@@ -40,8 +40,6 @@ internal class AttachmentTransferRouter(
             operationId = operationId,
             provider = transport,
         ) { execution, callback ->
-            execution.onDiscard { transport.cancel(operationId) }
-
             val encrypted = config.encryptionEnabled
             val prepared = checkNotNull(uploadPreparer).prepare(
                 attachment = attachment,
@@ -157,7 +155,6 @@ internal class AttachmentTransferRouter(
             operationId = operationId,
             provider = transport,
         ) { execution, callback ->
-            execution.onDiscard { transport.cancel(operationId) }
             val request = FileDownloadRequest(
                 operationId = operationId,
                 url = requireNotNull(attachment.url),

@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
@@ -20,6 +21,8 @@ import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper.getUpdateFileLocationCallback
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper.getResumePauseCallback
 import com.sceyt.chatuikit.persistence.file_transfer.ProgressUpdateCallback
 import com.sceyt.chatuikit.persistence.file_transfer.ResumePauseCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -55,6 +58,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.json.JSONObject
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
@@ -68,6 +72,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.GraphicsMode
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
@@ -589,6 +594,61 @@ class AttachmentUploadCoordinatorTest {
         assertThat(transport.uploadCalls.last().cancelled).isFalse()
         transport.uploadCalls.last().succeed("blocker-url")
         assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `plain shared upload sends prepared file details for every member`() {
+        checkSharedFileDetails(encrypted = false, cached = false)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `encrypted shared upload preserves member metadata with prepared file details`() {
+        checkSharedFileDetails(encrypted = true, cached = false)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `cached shared upload sends the resized file details for every member`() {
+        checkSharedFileDetails(encrypted = false, cached = true)
+    }
+
+    @Test
+    fun `cancel notifies the provider only after the upload coroutine stops`() {
+        val gate = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = gate
+        val attachment = uploadAttachment(messageTid = 340L)
+        uploadFile(attachment, transferTask(attachment))
+        val call = transport.uploadCalls.single()
+
+        try {
+            cancelUpload(attachment)
+            assertThat(call.cancelled).isTrue()
+            assertThat(transport.cancelCalls).isEmpty()
+        } finally {
+            gate.complete(Unit)
+        }
+        assertThat(transport.cancelCalls).containsExactly("upload:340")
+    }
+
+    @Test
+    fun `cancel cleans up a resumed upload that has not started yet`() {
+        val gate = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = gate
+        val attachment = uploadAttachment(messageTid = 341L)
+        uploadFile(attachment, transferTask(attachment))
+        pauseUpload(attachment, TransferState.Uploading)
+        resumeUpload(attachment, TransferState.PauseUpload)
+
+        try {
+            cancelUpload(attachment)
+            assertThat(transport.cancelCalls).isEmpty()
+        } finally {
+            gate.complete(Unit)
+        }
+        assertThat(transport.cancelCalls).containsExactly("upload:341")
+        assertThat(transport.uploadCalls).hasSize(1)
     }
 
     @Test
@@ -2365,6 +2425,74 @@ class AttachmentUploadCoordinatorTest {
             uploadResultCallback = null
             updateFileLocationCallback = null
         }
+
+    private fun checkSharedFileDetails(encrypted: Boolean, cached: Boolean) {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        SceytChatUIKit.fileTransfer.encryptionEnabled = encrypted
+        val source = imageFile("shared-source.png", 128, 96)
+        val prepared = imageFile("shared-prepared.png", 64, 48)
+        val owner = uploadAttachment(
+            messageTid = 350L,
+            type = AttachmentTypeEnum.Image.value,
+            filePath = source.path,
+        )
+        val attachments = (0..2).map { index ->
+            owner.copy(
+                messageTid = owner.messageTid + index,
+                metadata = """{"caption":"$index","szw":128,"szh":96}""",
+            )
+        }
+        val completed = mutableMapOf<Long, SceytAttachment>()
+        val tasks = attachments.map { attachment ->
+            transferTask(attachment).apply {
+                updateFileLocationCallback = getUpdateFileLocationCallback()
+                resumePauseCallback = getResumePauseCallback()
+            }
+        }
+        val releaseChecksum = CompletableDeferred<Unit>()
+        doSuspendableAnswer {
+            releaseChecksum.await()
+            FileChecksumData(1L, prepared.path, if (cached) "cached-url" else null, null, prepared.length())
+        }.whenever(attachmentLogic) { getFileChecksumData(owner.originalFilePath) }
+        transport.onPrepareUpload = { if (encrypted) mapOf("app" to "key") else emptyMap() }
+
+        uploadSharedFile(attachments[0], tasks[0])
+        uploadSharedFile(attachments[1], tasks[1])
+        pauseUpload(attachments[1], TransferState.Uploading)
+        tasks.forEach { task ->
+            task.addOnCompletionListener("prepared-details") { result ->
+                completed[task.messageTid] = result.getOrThrow()
+            }
+        }
+        releaseChecksum.complete(Unit)
+        uploadSharedFile(attachments[2], tasks[2])
+
+        assertThat(tasks[1].state).isEqualTo(TransferState.PauseUpload)
+        if (cached) assertThat(transport.uploadCalls).isEmpty()
+        else transport.uploadCalls.single().succeed("shared-url")
+        resumeUpload(attachments[1], TransferState.PauseUpload)
+
+        assertThat(completed).hasSize(3)
+        attachments.forEachIndexed { index, attachment ->
+            val result = checkNotNull(completed[attachment.messageTid])
+            assertThat(result.filePath).isEqualTo(prepared.path)
+            assertThat(result.fileSize).isEqualTo(prepared.length())
+            assertThat(result.originalFilePath).isEqualTo(source.path)
+            val metadata = JSONObject(checkNotNull(result.metadata))
+            assertThat(metadata.getInt("szw")).isEqualTo(64)
+            assertThat(metadata.getInt("szh")).isEqualTo(48)
+            assertThat(metadata.getString("caption")).isEqualTo(index.toString())
+            assertThat(metadata.optString("app")).isEqualTo(if (encrypted) "key" else "")
+        }
+    }
+
+    private fun imageFile(name: String, width: Int, height: Int): File {
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        return File(context.cacheDir, name).apply {
+            outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            bitmap.recycle()
+        }
+    }
 
     private fun uploadAttachment(
         messageTid: Long = 10L,
