@@ -464,11 +464,12 @@ class DecoratedTextView @JvmOverloads constructor(
             var leading = leadingIcon?.mutate()
             var trailing = trailingIcon?.mutate()
 
-            if (isHighlighted && !ignoreHighlight) {
+            if (isHighlighted) {
                 leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-                trailing = trailingIcon?.constantState?.newDrawable()?.apply {
-                    setTint(Color.WHITE)
-                }
+                if (!ignoreHighlight)
+                    trailing = trailingIcon?.constantState?.newDrawable()?.apply {
+                        setTint(Color.WHITE)
+                    }
             }
 
             this@DecoratedTextView.leadingIconSize = leadingIconSize
