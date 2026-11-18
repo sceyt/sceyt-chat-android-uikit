@@ -633,6 +633,24 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `upload again after cancel waits for the previous provider cleanup`() {
+        val gate = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = gate
+        val attachment = uploadAttachment(messageTid = 342L)
+        uploadFile(attachment, transferTask(attachment))
+
+        try {
+            cancelUpload(attachment)
+            uploadFile(attachment, transferTask(attachment))
+            assertThat(transport.uploadCalls).hasSize(1)
+        } finally {
+            gate.complete(Unit)
+        }
+        assertThat(transport.cancelCalls).containsExactly("upload:342")
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
     fun `cancel cleans up a resumed upload that has not started yet`() {
         val gate = CompletableDeferred<Unit>()
         transport.uploadCancellationGate = gate
