@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
@@ -35,6 +36,7 @@ internal class AttachmentUploadCoordinator(
     private val commands = Channel<suspend () -> Unit>(Channel.UNLIMITED)
     private val uploads = linkedSetOf<Upload>()
     private val pending = ArrayDeque<Upload>()
+    private val cleanups = hashMapOf<String, Job>()
     private var current: Upload? = null
 
     init {
@@ -224,7 +226,8 @@ internal class AttachmentUploadCoordinator(
         attempt.execution = createUploadExecution(owner, attempt)
         upload.preparedAttachment = null
         upload.attempt = attempt
-        attempt.execution.start(scope, previous?.execution) {
+        val pendingCleanup = cleanups[attempt.operationId]
+        attempt.execution.start(scope, previous?.execution, pendingCleanup) {
             performUpload(owner, attempt)
         }
     }
@@ -416,11 +419,18 @@ internal class AttachmentUploadCoordinator(
         upload.attempt?.let { attempt ->
             attempt.paused = true
             attempt.execution.stop()
-            if (discard) {
-                scope.launch {
-                    attempt.execution.cancel()
-                }
-            }
+            if (discard) scheduleCleanup(attempt)
+        }
+    }
+
+    private fun scheduleCleanup(attempt: Attempt) {
+        val operationId = attempt.operationId
+        val cleanup = scope.launch {
+            attempt.execution.cancel()
+        }
+        cleanups[operationId] = cleanup
+        cleanup.invokeOnCompletion {
+            dispatch { cleanups.remove(operationId, cleanup) }
         }
     }
 
