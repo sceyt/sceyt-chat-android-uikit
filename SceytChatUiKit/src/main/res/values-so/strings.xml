@@ -104,6 +104,7 @@
     <string name="sceyt_gallery">Gallery</string>
     <string name="sceyt_this_unsupported_file_format">This file format is not supported</string>
     <string name="sceyt_unsupported_file_format">file format is not supported</string>
+    <string name="sceyt_missing_attachments_removed">Some attachments were removed because the files no longer exist</string>
     <string name="sceyt_you_can_select_max">You can choose max</string>
     <string name="sceyt_video">Video</string>
     <string name="sceyt_image">Image</string>

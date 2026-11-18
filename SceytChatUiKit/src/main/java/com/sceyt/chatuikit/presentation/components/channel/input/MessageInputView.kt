@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
@@ -46,6 +45,7 @@ import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
+import com.sceyt.chatuikit.extensions.shortToast
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -112,10 +112,12 @@ import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import com.sceyt.chatuikit.styles.input.MessageSearchControlsStyle
 import com.vanniktech.ui.animateToGone
 import com.vanniktech.ui.animateToVisible
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -938,6 +940,7 @@ class MessageInputView @JvmOverloads constructor(
         metadata: String = "",
     ): MutableList<Attachment> {
         val attachments = mutableListOf<Attachment>()
+        var hasMissingFile = false
         for (item in typeAndPath) {
             val (attachmentType, path) = item
             if (checkIsExistAttachment(path))
@@ -950,13 +953,10 @@ class MessageInputView @JvmOverloads constructor(
             )
             if (attachment != null) {
                 attachments.add(attachment)
-            } else
-                Toast.makeText(
-                    context,
-                    "\"${File(path).name}\" ${getString(R.string.sceyt_unsupported_file_format)}",
-                    Toast.LENGTH_SHORT
-                ).show()
+            } else hasMissingFile = true
         }
+        if (hasMissingFile)
+            context.shortToast(R.string.sceyt_missing_attachments_removed)
         return attachments
     }
 
@@ -1168,6 +1168,19 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
         filePickerHelper?.removeSavedPath(item.attachment.filePath)
+    }
+
+    internal suspend fun removeMissingAttachments() {
+        val attachments = allAttachments.toList()
+        if (attachments.isEmpty()) return
+        val missing = withContext(Dispatchers.IO) {
+            attachments.filterNot { File(it.filePath).exists() }
+        }
+        if (missing.isEmpty()) return
+        missing.forEach { removeAttachment(AttachmentItem(it)) }
+        updateDraftMessage()
+        determineInputState()
+        context.shortToast(R.string.sceyt_missing_attachments_removed)
     }
 
     override fun onAttachmentClick(item: AttachmentItem) {
