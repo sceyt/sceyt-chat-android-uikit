@@ -1,10 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.picker
 
+import android.Manifest
 import android.content.ContentUris
 import android.content.Context
 import android.content.res.Configuration
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.provider.MediaStore.Files
@@ -14,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
@@ -27,11 +30,9 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytBottomSheetMediaPickerBinding
 import com.sceyt.chatuikit.extensions.TAG
-import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.getOrientation
-import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
-import com.sceyt.chatuikit.extensions.initPermissionLauncher
+import com.sceyt.chatuikit.extensions.hasOneOfPermissions
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.screenHeightPx
@@ -99,12 +100,15 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     private fun checkPermissions(callBack: (granted: Boolean) -> Unit) {
-        val resultLauncher = initPermissionLauncher(callBack)
-        val permissions = getPermissionsForMangeStorage()
-        val hasAccess = requireContext().checkAndAskPermissions(resultLauncher, *permissions)
-
-        if (hasAccess)
-            callBack.invoke(true)
+        val permissions = filterType.readPermissions()
+        val resultLauncher = registerForActivityResult(RequestMultiplePermissions()) {
+            callBack(requireContext().hasOneOfPermissions(*permissions))
+        }
+        if (requireContext().hasOneOfPermissions(*permissions)) {
+            callBack(true)
+        } else {
+            resultLauncher.launch(permissions)
+        }
     }
 
     override fun onCreateView(
@@ -389,6 +393,22 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     enum class PickerFilterType {
         All,
         Image,
-        Video
+        Video;
+
+        internal fun readPermissions(): Array<String> {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                return arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+            val visualPermissions = when (this) {
+                All -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+                Image -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+                Video -> arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
+            }
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                visualPermissions + Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+            } else {
+                visualPermissions
+            }
+        }
     }
 }
