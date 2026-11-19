@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -49,6 +50,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment() {
         createViewModelFactory()
     }
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
+    private var bottomSheetView: View? = null
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
     private var filterType: PickerFilterType = PickerFilterType.All
@@ -149,7 +151,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect { state ->
                 setCounter(state.selectedCount)
-                binding.layoutEmptyState.root.isVisible = state.isLoaded && state.items.isEmpty()
+                setEmptyState(state.isEmpty)
             }
         }
     }
@@ -164,8 +166,41 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment() {
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 binding.layoutCounter.translationY = -((bottomSheet.height - peekHeight).toFloat())
                 bottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback)
+                bottomSheetView = bottomSheet
+                updateSheetHeight(viewModel.state.value.isEmpty)
             }
         }
+
+    private fun setEmptyState(isEmpty: Boolean) {
+        binding.layoutEmptyState.root.isVisible = isEmpty
+        binding.layoutCounter.isVisible = !isEmpty
+        updateSheetHeight(isEmpty)
+    }
+
+    private fun updateSheetHeight(isEmpty: Boolean) {
+        val bottomSheet = bottomSheetView ?: return
+        val state = bottomSheetBehavior.state
+        val isSheetMoving = state == BottomSheetBehavior.STATE_DRAGGING || state == BottomSheetBehavior.STATE_SETTLING
+        if (isSheetMoving || state == BottomSheetBehavior.STATE_HIDDEN) return
+
+        val maxHeight = if (isEmpty) peekHeight.toInt() else NO_MAX_HEIGHT
+        if (bottomSheetBehavior.maxHeight == maxHeight) return
+
+        if (state != BottomSheetBehavior.STATE_COLLAPSED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            return
+        }
+        bottomSheetBehavior.maxHeight = maxHeight
+        bottomSheet.requestLayout()
+        bottomSheet.doOnPreDraw {
+            binding.layoutCounter.translationY = -((it.height - peekHeight).toFloat())
+        }
+    }
+
+    override fun onDestroyView() {
+        bottomSheetView = null
+        super.onDestroyView()
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -213,8 +248,11 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment() {
             }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (newState == BottomSheetBehavior.STATE_HIDDEN)
-                    dismissAllowingStateLoss()
+                when (newState) {
+                    BottomSheetBehavior.STATE_HIDDEN -> dismissAllowingStateLoss()
+                    BottomSheetBehavior.STATE_COLLAPSED,
+                    BottomSheetBehavior.STATE_EXPANDED -> updateSheetHeight(viewModel.state.value.isEmpty)
+                }
             }
         }
     }
@@ -245,6 +283,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment() {
     }
 
     companion object {
+        private const val NO_MAX_HEIGHT = -1
         private const val STATE_SELECTION = "stateSelection"
         private const val MAX_SELECTION_COUNT = "maxSelectionCount"
         private const val FILTER_TYPE = "filterType"
