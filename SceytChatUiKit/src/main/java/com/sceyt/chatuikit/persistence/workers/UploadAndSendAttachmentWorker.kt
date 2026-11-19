@@ -61,6 +61,7 @@ class UploadAndSendAttachmentWorker(
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val uploadLock: AttachmentUploadLock by inject()
+    private val sendOrder: AttachmentSendOrder by inject()
     private val fileTransferService: FileTransferService by inject()
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -76,6 +77,7 @@ class UploadAndSendAttachmentWorker(
         val messageTid = inputData.getLong(MESSAGE_TID, 0)
         // Start foreground setup now without delaying this worker's place in the upload queue.
         launch(start = CoroutineStart.UNDISPATCHED) { startForeground(messageTid) }
+        sendOrder.awaitPreviousUploads(messageTid)
 
         val isSharing =
             inputData.getBoolean(IS_SHARING, false) || fileTransferService.getTasks().values.any {

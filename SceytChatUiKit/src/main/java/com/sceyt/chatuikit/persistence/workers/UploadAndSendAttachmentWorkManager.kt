@@ -5,8 +5,10 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
+import kotlinx.coroutines.flow.Flow
 
 object UploadAndSendAttachmentWorkManager {
 
@@ -43,4 +45,7 @@ object UploadAndSendAttachmentWorkManager {
     fun cancelWorksByTag(context: Context, tag: String): Operation {
         return WorkManager.getInstance(context).cancelAllWorkByTag(tag)
     }
+
+    internal fun observeWork(context: Context, messageTid: Long): Flow<List<WorkInfo>> =
+        WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(messageTid.toString())
 }
