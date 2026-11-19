@@ -235,6 +235,8 @@
     <string name="sceyt_message_self_destructed">تدمير ذاتي للرسالة</string>
     <string name="sceyt_no_media_title">لا توجد وسائط</string>
     <string name="sceyt_no_media_desc">ستظهر الوسائط المشتركة هنا.</string>
+    <string name="sceyt_no_gallery_media_title">لا توجد صور أو فيديوهات</string>
+    <string name="sceyt_no_gallery_media_desc">ستظهر هنا الصور والفيديوهات المحفوظة على جهازك.</string>
     <string name="sceyt_no_files_title">لا توجد ملفات</string>
     <string name="sceyt_no_files_desc">ستظهر الملفات المشتركة هنا.</string>
     <string name="sceyt_no_voices_title">لا توجد رسائل صوتية</string>

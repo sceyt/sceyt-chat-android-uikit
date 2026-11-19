@@ -1,11 +1,9 @@
 package com.sceyt.chatuikit.styles.extensions.search
 
-import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytChannelListEmptyStateBinding
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
-import com.sceyt.chatuikit.styles.common.EmptyStateStyle
+import com.sceyt.chatuikit.styles.extensions.common.applyStyle
 import com.sceyt.chatuikit.styles.search.ChannelsSearchPageStyle
 import com.sceyt.chatuikit.styles.search.ChatsSearchPageStyle
 import com.sceyt.chatuikit.styles.search.FilesSearchPageStyle
@@ -116,24 +114,5 @@ private fun PageStateView.setEmptySearchState(style: ChatsSearchPageStyle) {
         )
     } else {
         setEmptySearchStateView(style.emptyState)
-    }
-}
-
-private fun SceytChannelListEmptyStateBinding.applyStyle(style: EmptyStateStyle) {
-    image.isVisible = style.icon != null
-    if (style.icon != null) {
-        image.setImageDrawable(style.icon)
-        if (style.iconTint != UNSET_COLOR) {
-            image.setColorFilter(style.iconTint)
-        } else {
-            image.clearColorFilter()
-        }
-    }
-    tvTitle.text = style.titleText
-    style.titleStyle.apply(tvTitle)
-    tvDescription.isVisible = !style.subtitleText.isNullOrEmpty()
-    if (!style.subtitleText.isNullOrEmpty()) {
-        tvDescription.text = style.subtitleText
-        style.subtitleStyle.apply(tvDescription)
     }
 }
