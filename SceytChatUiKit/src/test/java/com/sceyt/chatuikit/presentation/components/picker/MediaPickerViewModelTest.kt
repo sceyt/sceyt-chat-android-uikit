@@ -196,6 +196,7 @@ class MediaPickerViewModelTest {
 
         assertThat(viewModel.state.value.isLoaded).isTrue()
         assertThat(viewModel.state.value.items).isEmpty()
+        assertThat(viewModel.state.value.isEmpty).isTrue()
     }
 
     @Test
@@ -208,6 +209,7 @@ class MediaPickerViewModelTest {
 
         assertThat(viewModel.state.value.isLoaded).isFalse()
         assertThat(viewModel.state.value.items).isEmpty()
+        assertThat(viewModel.state.value.isEmpty).isFalse()
     }
 
     @Test
@@ -412,6 +414,7 @@ class MediaPickerViewModelTest {
         assertThat(viewModel.getSelectedMedia()).isEmpty()
     }
 
+    @Suppress("SameParameterValue")
     private fun verifyFullGalleryQueries(count: Int) {
         verify(provider, times(count)).query(
             any(),
@@ -422,6 +425,7 @@ class MediaPickerViewModelTest {
         )
     }
 
+    @Suppress("SameParameterValue")
     private fun verifySnapshotQueries(count: Int) {
         verify(provider, times(count)).query(
             any(),

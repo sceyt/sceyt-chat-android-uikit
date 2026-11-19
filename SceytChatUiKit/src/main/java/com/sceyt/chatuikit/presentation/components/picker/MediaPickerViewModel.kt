@@ -40,7 +40,10 @@ data class MediaPickerState(
     val items: List<MediaItem> = emptyList(),
     val selectedCount: Int = 0,
     val isLoaded: Boolean = false,
-)
+) {
+    val isEmpty: Boolean
+        get() = isLoaded && items.isEmpty()
+}
 
 /**
  * Loads gallery media for [BottomSheetMediaPicker] once, refreshes it when the gallery changes,
