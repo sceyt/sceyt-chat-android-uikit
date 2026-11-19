@@ -122,11 +122,19 @@ class PinMessageUseCaseTest {
     }
 
     @Test
-    fun `refuses to pin an auto-deleting message`() = runTest(dispatcher) {
+    fun `allows pinning a message with an auto-delete timer`() = runTest(dispatcher) {
         whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(messageEntity(autoDeleteAt = 5_000L)))
 
-        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
-        verify(pendingPinDao, never()).replace(any())
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Success::class.java)
+        val captor = argumentCaptor<PendingPinEntity>()
+        verify(pendingPinDao).replace(captor.capture())
+        with(captor.firstValue) {
+            assertThat(isPin).isTrue()
+            assertThat(messageTid).isEqualTo(42L)
+            assertThat(channelId).isEqualTo(7L)
+            assertThat(messageId).isEqualTo(42L)
+            assertThat(pinScope).isEqualTo(StoredPinScope.ForAll.value)
+        }
     }
 
     @Test
