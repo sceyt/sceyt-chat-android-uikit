@@ -256,7 +256,8 @@ internal class PersistenceChannelsLogicImpl(
             channelsCache.removeChannelMessageReactions(message.channelId, message.id)
         }
 
-        channelDao.getChannelById(message.channelId)?.toChannel()?.let { channel ->
+        channelDao.getChannelById(message.channelId)?.let { channelDb ->
+            val channel = channelDb.toChannel()
             channel.lastMessage?.let { lastMessage ->
                 if (lastMessage.tid == message.tid) {
                     if (message.isPending() && message.state == MessageState.Deleted) {
@@ -271,7 +272,7 @@ internal class PersistenceChannelsLogicImpl(
                 }
             } ?: run {
                 if (state.isHardDeleted() || message.isPending() && state.isDeleted())
-                    deleteMessage(message.channelId, message)
+                    deleteMessage(message.channelId, message, channelDb.channelEntity.lastMessageTid)
                 else
                     channelsCache.upsertChannel(channel.copy(lastMessage = message))
             }
@@ -1302,15 +1303,19 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.clearedHistory(channelId, channel.messagesClearedAt)
     }
 
-    private suspend fun deleteMessage(channelId: Long, message: SceytMessage) {
-        channelsCache.getOneOf(channelId)?.let {
-            if (it.lastMessage?.id == message.id) {
-                val lastMessage = messageDao.getLastMessage(channelId)
-                with(lastMessage?.messageEntity) {
-                    channelDao.updateLastMessage(channelId, this?.tid, this?.createdAt)
-                }
-                channelsCache.updateLastMessage(channelId, lastMessage?.toSceytMessage())
+    private suspend fun deleteMessage(channelId: Long, message: SceytMessage, lastMessageTid: Long?) {
+        val cachedLastMessage = channelsCache.getOneOf(channelId)?.lastMessage
+        val matchesStoredTid = lastMessageTid == message.tid
+        val matchesCachedTid = cachedLastMessage?.tid == message.tid
+        // Pending messages share ID 0 and are matched by their transaction IDs.
+        val matchesCachedServerId = message.id != 0L && cachedLastMessage?.id == message.id
+
+        if (matchesStoredTid || matchesCachedTid || matchesCachedServerId) {
+            val lastMessage = messageDao.getLastMessage(channelId)
+            with(lastMessage?.messageEntity) {
+                channelDao.updateLastMessage(channelId, this?.tid, this?.createdAt)
             }
+            channelsCache.updateLastMessage(channelId, lastMessage?.toSceytMessage())
         }
         chatUserReactionDao.deleteChannelMessageUserReaction(channelId, message.id)
     }
