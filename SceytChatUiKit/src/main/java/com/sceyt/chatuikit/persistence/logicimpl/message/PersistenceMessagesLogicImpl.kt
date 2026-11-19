@@ -114,6 +114,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -746,7 +747,7 @@ internal class PersistenceMessagesLogicImpl(
         }
         channel.close()
         awaitClose()
-    }
+    }.flowOn(dispatcherIO)
 
     private fun tmpMessageToSceytMessage(
         channelId: Long,
