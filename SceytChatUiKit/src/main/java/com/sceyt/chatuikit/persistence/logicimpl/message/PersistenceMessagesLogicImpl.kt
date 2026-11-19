@@ -824,7 +824,7 @@ internal class PersistenceMessagesLogicImpl(
                     "Send message non-resendable error: ${exception?.message}, errorType: ${errorType.value}" +
                             "deleting message from db channel id $channelId, tid:${message.tid} id:${message.id}"
                 )
-                messageDao.deleteMessageByTid(message.tid)
+                deleteMessageLocally(channelId, message, MessageState.DeletedHard)
             }
         }
     }
@@ -980,7 +980,6 @@ internal class PersistenceMessagesLogicImpl(
             ?: getMessageFromDbByTid(message.tid)
             ?: message
         if (storedMessage.isPending()) {
-            val clonedMessage = message.copy(state = MessageState.Deleted)
             runCatchingCancellable {
                 UploadAndSendAttachmentWorkManager.cancelWorksByTag(
                     context = context,
@@ -992,9 +991,7 @@ internal class PersistenceMessagesLogicImpl(
             storedMessage.attachments?.forEach {
                 fileTransferService.cancelUpload(it)
             }
-            messageDao.deleteMessageByTid(message.tid)
-            messagesCache.hardDeleteMessage(channelId, message)
-            persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
+            val deletedMessage = deleteMessageLocally(channelId, message, MessageState.Deleted)
             // The send request may already have reached the server, so persist a delete-by-tid
             // intent (retried on reconnect) and attempt to delete it on the server now.
             pendingMessageDeleteByTidDao.insert(
@@ -1006,7 +1003,7 @@ internal class PersistenceMessagesLogicImpl(
                 )
             )
             deleteMessageByTidImpl(channelId, message.tid, DeleteHard)
-            return@withContext SceytResponse.Success(clonedMessage)
+            return@withContext SceytResponse.Success(deletedMessage)
         }
 
         // Insert pending message state
@@ -1065,6 +1062,18 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         return response
+    }
+
+    private suspend fun deleteMessageLocally(
+        channelId: Long,
+        message: SceytMessage,
+        deletedState: MessageState,
+    ): SceytMessage {
+        val deletedMessage = message.copy(channelId = channelId, state = deletedState)
+        messageDao.deleteMessageByTid(message.tid)
+        messagesCache.hardDeleteMessage(channelId, message)
+        persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
+        return deletedMessage
     }
 
     private suspend fun deleteMessageImpl(
