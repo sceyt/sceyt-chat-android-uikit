@@ -27,6 +27,14 @@
         app:spanCount="3"
         tools:listitem="@layout/sceyt_item_picker_image" />
 
+    <include
+        android:id="@+id/layoutEmptyState"
+        layout="@layout/sceyt_channel_list_empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tvTitle"
+        android:visibility="gone" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="5dp"
