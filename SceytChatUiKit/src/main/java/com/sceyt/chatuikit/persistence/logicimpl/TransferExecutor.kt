@@ -36,6 +36,7 @@ internal class TransferExecutor(
     fun start(
         scope: CoroutineScope,
         previous: TransferExecutor?,
+        pendingCleanup: Job? = null,
         block: suspend () -> Unit,
     ) {
         job = scope.launch(start = CoroutineStart.ATOMIC) {
@@ -44,6 +45,7 @@ internal class TransferExecutor(
                 previous?.awaitStopped()
                 if (previous != null && previous.operationId != operationId)
                     previous.cancel()
+                pendingCleanup?.join()
             }
             currentCoroutineContext().ensureActive()
             block()

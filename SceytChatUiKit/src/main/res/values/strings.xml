@@ -96,6 +96,8 @@
     <string name="sceyt_unblock">Unblock</string>
     <string name="sceyt_no_media_title">No media</string>
     <string name="sceyt_no_media_desc">Shared media will appear here.</string>
+    <string name="sceyt_no_gallery_media_title">No photos or videos</string>
+    <string name="sceyt_no_gallery_media_desc">Photos and videos saved to your device will appear here.</string>
     <string name="sceyt_no_files_title">No files</string>
     <string name="sceyt_no_files_desc">Shared files will appear here.</string>
     <string name="sceyt_no_voices_title">No voice messages</string>
@@ -126,6 +128,7 @@
     <string name="sceyt_gallery">Gallery</string>
     <string name="sceyt_this_unsupported_file_format">This file format is not supported</string>
     <string name="sceyt_unsupported_file_format">file format is not supported</string>
+    <string name="sceyt_missing_attachments_removed">Some attachments were removed because the files no longer exist</string>
     <string name="sceyt_you_can_select_max">You can select max</string>
     <string name="sceyt_video">Video</string>
     <string name="sceyt_image">Image</string>

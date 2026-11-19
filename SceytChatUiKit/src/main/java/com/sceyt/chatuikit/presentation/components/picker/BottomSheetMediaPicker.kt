@@ -1,66 +1,58 @@
 package com.sceyt.chatuikit.presentation.components.picker
 
-import android.content.ContentUris
+import android.Manifest
 import android.content.Context
 import android.content.res.Configuration
-import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
-import android.provider.MediaStore.Files
-import android.provider.MediaStore.Images
-import android.provider.MediaStore.Video
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResult
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytBottomSheetMediaPickerBinding
-import com.sceyt.chatuikit.extensions.TAG
-import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.getOrientation
-import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
-import com.sceyt.chatuikit.extensions.initPermissionLauncher
+import com.sceyt.chatuikit.extensions.hasOneOfPermissions
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
-import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaData
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.picker.adapter.holders.MediaPickerItemViewHolderFactory
+import com.sceyt.chatuikit.styles.extensions.common.applyStyle
 import com.sceyt.chatuikit.styles.media_picker.MediaPickerStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.parcelize.Parcelize
-import java.io.File
 
 
-class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCallbacks<Cursor> {
+class BottomSheetMediaPicker : BottomSheetDialogFragment() {
     private lateinit var binding: SceytBottomSheetMediaPickerBinding
+    private val viewModel: MediaPickerViewModel by viewModels {
+        createViewModelFactory()
+    }
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
-    private val selectedMedia = mutableSetOf<MediaData>()
-    private var selectedMediaPaths = mutableSetOf<String>()
-    private var requestedSelectionMediaPaths = mutableSetOf<String>()
+    private var bottomSheetView: View? = null
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
-    private var maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT
     private var filterType: PickerFilterType = PickerFilterType.All
     private lateinit var style: MediaPickerStyle
     private val imagesAdapter by lazy {
@@ -70,27 +62,33 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        savedInstanceState?.getStringArray(STATE_SELECTION)?.let {
-            selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
-        } ?: run {
-            arguments?.getStringArray(STATE_SELECTION)?.let {
-                requestedSelectionMediaPaths =
-                    it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
-            }
-        }
-
-        arguments?.getInt(MAX_SELECTION_COUNT)?.let {
-            maxSelectCount = it
-        }
-
         arguments?.getInt(FILTER_TYPE)?.let {
             filterType = PickerFilterType.entries[it]
         }
 
         checkPermissions { granted ->
             if (granted)
-                LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
+                viewModel.loadMedia()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.refreshIfGalleryChanged()
+    }
+
+    private fun createViewModelFactory(): ViewModelProvider.Factory {
+        val maxSelectCount = arguments?.getInt(MAX_SELECTION_COUNT) ?: MAX_SELECT_MEDIA_COUNT
+        val preselectedPaths = arguments?.getStringArray(STATE_SELECTION)
+            ?.filter { path -> path.isNotNullOrBlank() }
+            .orEmpty()
+
+        return MediaPickerViewModelFactory(
+            contentResolver = requireContext().applicationContext.contentResolver,
+            filterType = filterType,
+            maxSelectCount = maxSelectCount,
+            preselectedPaths = preselectedPaths,
+        )
     }
 
     private fun initGalleryViewHolderFactory(): MediaPickerItemViewHolderFactory {
@@ -99,12 +97,15 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     private fun checkPermissions(callBack: (granted: Boolean) -> Unit) {
-        val resultLauncher = initPermissionLauncher(callBack)
-        val permissions = getPermissionsForMangeStorage()
-        val hasAccess = requireContext().checkAndAskPermissions(resultLauncher, *permissions)
-
-        if (hasAccess)
-            callBack.invoke(true)
+        val permissions = filterType.readPermissions()
+        val resultLauncher = registerForActivityResult(RequestMultiplePermissions()) {
+            callBack(requireContext().hasOneOfPermissions(*permissions))
+        }
+        if (requireContext().hasOneOfPermissions(*permissions)) {
+            callBack(true)
+        } else {
+            resultLauncher.launch(permissions)
+        }
     }
 
     override fun onCreateView(
@@ -134,7 +135,25 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         }
 
         binding.initViews()
-        setCounter()
+        observeState()
+    }
+
+    private fun observeState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.state
+                .map { it.items }
+                .distinctUntilChanged()
+                .collect { items ->
+                    imagesAdapter.setData(items)
+                }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.state.collect { state ->
+                setCounter(state.selectedCount)
+                setEmptyState(state.isEmpty)
+            }
+        }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) =
@@ -147,8 +166,41 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 binding.layoutCounter.translationY = -((bottomSheet.height - peekHeight).toFloat())
                 bottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback)
+                bottomSheetView = bottomSheet
+                updateSheetHeight(viewModel.state.value.isEmpty)
             }
         }
+
+    private fun setEmptyState(isEmpty: Boolean) {
+        binding.layoutEmptyState.root.isVisible = isEmpty
+        binding.layoutCounter.isVisible = !isEmpty
+        updateSheetHeight(isEmpty)
+    }
+
+    private fun updateSheetHeight(isEmpty: Boolean) {
+        val bottomSheet = bottomSheetView ?: return
+        val state = bottomSheetBehavior.state
+        val isSheetMoving = state == BottomSheetBehavior.STATE_DRAGGING || state == BottomSheetBehavior.STATE_SETTLING
+        if (isSheetMoving || state == BottomSheetBehavior.STATE_HIDDEN) return
+
+        val maxHeight = if (isEmpty) peekHeight.toInt() else NO_MAX_HEIGHT
+        if (bottomSheetBehavior.maxHeight == maxHeight) return
+
+        if (state != BottomSheetBehavior.STATE_COLLAPSED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            return
+        }
+        bottomSheetBehavior.maxHeight = maxHeight
+        bottomSheet.requestLayout()
+        bottomSheet.doOnPreDraw {
+            binding.layoutCounter.translationY = -((it.height - peekHeight).toFloat())
+        }
+    }
+
+    override fun onDestroyView() {
+        bottomSheetView = null
+        super.onDestroyView()
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -157,9 +209,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
 
     private fun SceytBottomSheetMediaPickerBinding.initViews() {
         btnNext.setOnClickListener {
-            val result = ArrayList(selectedMedia.map {
-                SelectedMediaData(it.contentUri, it.realPath, it.mediaType)
-            })
+            val result = ArrayList(viewModel.getSelectedMedia())
             setFragmentResult(REQUEST_KEY, Bundle().apply {
                 putParcelableArrayList(RESULT_SELECTED_MEDIA, result)
             })
@@ -168,34 +218,24 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     private fun onMediaClick(mediaItem: MediaItem, position: Int) {
-        val item = mediaItem.media
-        if (selectedMedia.size == maxSelectCount && item.selected.not()) {
+        if (position == RecyclerView.NO_POSITION) return
+
+        if (!viewModel.toggleSelection(mediaItem.media)) {
             Toast.makeText(
                 requireContext(), "${context?.getString(R.string.sceyt_you_can_select_max)} " +
-                        "$maxSelectCount", Toast.LENGTH_SHORT
+                        "${viewModel.maxSelectCount}", Toast.LENGTH_SHORT
             ).show()
             return
         }
-        item.selected = !item.selected
         imagesAdapter.notifyItemChanged(
             position,
             GalleryMediaItemDiff.DEFAULT.copy(filePathChanged = false)
         )
-
-        if (item.selected) {
-            selectedMedia.add(item)
-            selectedMediaPaths.add(item.realPath)
-        } else {
-            selectedMedia.remove(item)
-            selectedMediaPaths.remove(item.realPath)
-        }
-
-        setCounter()
     }
 
-    private fun setCounter() {
-        binding.counter.isVisible = selectedMediaPaths.isNotEmpty()
-        binding.counter.text = selectedMediaPaths.size.toString()
+    private fun setCounter(count: Int) {
+        binding.counter.isVisible = count > 0
+        binding.counter.text = count.toString()
     }
 
     private val bottomSheetCallback by lazy {
@@ -208,131 +248,13 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (newState == BottomSheetBehavior.STATE_HIDDEN)
-                    dismissAllowingStateLoss()
-            }
-        }
-    }
-
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-        if (id != LOADER_ID) throw IllegalStateException("illegal loader id: $id")
-        val projection = arrayOf(
-            Files.FileColumns._ID,
-            Files.FileColumns.DATA,
-            Files.FileColumns.DATE_ADDED,
-            Files.FileColumns.MEDIA_TYPE,
-            Video.Media.DURATION
-        )
-        val sortOrder = Video.Media.DATE_ADDED + " DESC"
-        val selection = getSelection(filterType)
-        val queryUri = Files.getContentUri("external")
-
-        return CursorLoader(requireContext(), queryUri, projection, selection, null, sortOrder)
-    }
-
-    private fun getSelection(filter: PickerFilterType): String {
-        val selectionImage = Files.FileColumns.MEDIA_TYPE + "=" + Files.FileColumns.MEDIA_TYPE_IMAGE
-        val selectionVideo = Files.FileColumns.MEDIA_TYPE + "=" + Files.FileColumns.MEDIA_TYPE_VIDEO
-        val selectionAll = "$selectionImage OR $selectionVideo"
-
-        return when (filter) {
-            PickerFilterType.All -> selectionAll
-            PickerFilterType.Image -> selectionImage
-            PickerFilterType.Video -> selectionVideo
-        }
-    }
-
-    override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
-        cursor ?: return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            loadWithFlow(cursor).collect {
-                imagesAdapter.addNewData(it)
-            }
-        }
-    }
-
-    override fun onLoaderReset(loader: Loader<Cursor>) {
-        imagesAdapter.setData(emptyList())
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putStringArray(STATE_SELECTION, selectedMediaPaths.toTypedArray())
-    }
-
-    private fun checkSelectedItems(mediaItem: MediaItem): Boolean {
-        val realPath = mediaItem.media.realPath
-        var contains = selectedMediaPaths.contains(realPath)
-
-        if (!contains && requestedSelectionMediaPaths.contains(realPath)) {
-            contains = true
-            selectedMediaPaths.add(realPath)
-        }
-
-        if (contains) selectedMedia.add(mediaItem.media)
-        return contains
-    }
-
-    private fun loadWithFlow(cursor: Cursor) = callbackFlow {
-        withContext(Dispatchers.IO) {
-            try {
-                val items = ArrayList<MediaItem>()
-                val wrongImages = ArrayList<MediaItem>()
-                val columnIndex = cursor.getColumnIndex(Files.FileColumns._ID)
-                val columnMediaTypeIndex = cursor.getColumnIndex(Files.FileColumns.MEDIA_TYPE)
-                val columnDataIndex = cursor.getColumnIndex(Files.FileColumns.DATA)
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(columnIndex)
-                    val type = cursor.getInt(columnMediaTypeIndex)
-                    var isImage: Boolean
-                    var videoDuration = 0.0
-
-                    val contentUri = if (type == Files.FileColumns.MEDIA_TYPE_VIDEO) {
-                        isImage = false
-
-                        val durationIndex = cursor.getColumnIndex(Video.Media.DURATION)
-                        videoDuration = cursor.getDouble(durationIndex)
-                        ContentUris.withAppendedId(Video.Media.EXTERNAL_CONTENT_URI, id)
-
-                    } else {
-                        isImage = true
-                        ContentUris.withAppendedId(Images.Media.EXTERNAL_CONTENT_URI, id)
-                    }
-
-                    val realPath = cursor.getString(columnDataIndex)
-                    val isWrong = !File(realPath).exists()
-
-                    val mediaType = if (isImage) MediaType.Image else MediaType.Video
-                    val model = MediaData(contentUri, realPath, isWrong, mediaType = mediaType)
-                    val mediaItem = if (isImage)
-                        MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
-                    mediaItem.media.selected = checkSelectedItems(mediaItem)
-
-                    if (isWrong)
-                        wrongImages.add(mediaItem)
-                    else
-                        items.add(mediaItem)
-
-                    if (items.size == CHUNK_SIZE) {
-                        trySend(ArrayList(items))
-                        items.clear()
-                    }
+                when (newState) {
+                    BottomSheetBehavior.STATE_HIDDEN -> dismissAllowingStateLoss()
+                    BottomSheetBehavior.STATE_COLLAPSED,
+                    BottomSheetBehavior.STATE_EXPANDED -> updateSheetHeight(viewModel.state.value.isEmpty)
                 }
-                cursor.moveToPosition(-1)
-
-                val data = items + wrongImages
-                if (data.isNotEmpty())
-                    trySend(data)
-
-            } catch (ex: Exception) {
-                SceytLog.e(this@BottomSheetMediaPicker.TAG, ex.message.toString())
-            } finally {
-                withContext(Dispatchers.Main) { setCounter() }
-                channel.close()
             }
         }
-        awaitClose()
     }
 
     @Parcelize
@@ -357,11 +279,11 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         style.confirmButtonStyle.apply(btnNext)
         style.countTextStyle.apply(counter)
         style.countBackgroundStyle.apply(counter)
+        layoutEmptyState.applyStyle(style.emptyStateStyle)
     }
 
     companion object {
-        private const val LOADER_ID = 0x1337
-        private const val CHUNK_SIZE = 150
+        private const val NO_MAX_HEIGHT = -1
         private const val STATE_SELECTION = "stateSelection"
         private const val MAX_SELECTION_COUNT = "maxSelectionCount"
         private const val FILTER_TYPE = "filterType"
@@ -389,6 +311,26 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     enum class PickerFilterType {
         All,
         Image,
-        Video
+        Video;
+
+        internal fun readPermissions(): Array<String> {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                return arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+            val visualPermissions = when (this) {
+                All -> arrayOf(
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_MEDIA_VIDEO
+                )
+
+                Image -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+                Video -> arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
+            }
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                visualPermissions + Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+            } else {
+                visualPermissions
+            }
+        }
     }
 }
