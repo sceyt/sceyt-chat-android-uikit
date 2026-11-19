@@ -580,6 +580,20 @@ internal abstract class MessageDao {
     @Query("SELECT * FROM $MESSAGE_TABLE WHERE tid = :tid")
     abstract suspend fun getMessageByTid(tid: Long): MessageDb?
 
+    @Query(
+        """
+        SELECT message.tid FROM $MESSAGE_TABLE AS message
+        JOIN $MESSAGE_TABLE AS target ON target.tid = :tid
+        LEFT JOIN $ATTACHMENT_PAYLOAD_TABLE AS messagePayload ON messagePayload.messageTid = message.tid
+        LEFT JOIN $ATTACHMENT_PAYLOAD_TABLE AS targetPayload ON targetPayload.messageTid = target.tid
+        WHERE message.channelId = target.channelId
+          AND message.deliveryStatus = $PENDING_STATUS
+          AND (message.createdAt < target.createdAt
+            OR (message.createdAt = target.createdAt AND messagePayload.id < targetPayload.id))
+        """
+    )
+    abstract suspend fun getPreviousPendingMessageTids(tid: Long): List<Long>
+
     @Transaction
     @Query("SELECT * FROM $MESSAGE_TABLE WHERE tid IN (:tIds)")
     abstract suspend fun getMessagesByTid(tIds: List<Long>): List<MessageDb>
