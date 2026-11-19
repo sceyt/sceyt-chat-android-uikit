@@ -32,7 +32,9 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -60,7 +62,7 @@ class MediaPickerViewModelTest {
     fun setUp() {
         Dispatchers.setMain(StandardTestDispatcher())
         ShadowContentResolver.registerProviderInternal(MediaStore.AUTHORITY, provider)
-        whenever(provider.query(any(), any(), any(), anyOrNull(), any())).thenAnswer {
+        whenever(provider.query(any(), any(), any(), anyOrNull(), anyOrNull())).thenAnswer {
             if (isQueryFailing) null else galleryCursor()
         }
     }
@@ -294,6 +296,84 @@ class MediaPickerViewModelTest {
         assertThat(viewModel.state.value.items.media(deleted.path).isWrong).isTrue()
         assertThat(viewModel.state.value.selectedCount).isEqualTo(0)
         assertThat(viewModel.getSelectedMedia()).isEmpty()
+    }
+
+    @Test
+    fun `returning without gallery changes does not reload media`() = runTest {
+        gallery = listOf(photo(1), photo(2))
+        val viewModel = createViewModel()
+        viewModel.loadMedia()
+        advanceUntilIdle()
+
+        viewModel.refreshIfGalleryChanged()
+        advanceUntilIdle()
+
+        verifyFullGalleryQueries(count = 1)
+    }
+
+    @Test
+    fun `returning after delete reloads media without notification`() = runTest {
+        val deleted = photo(1)
+        gallery = listOf(photo(2), deleted)
+        val viewModel = createViewModel()
+        viewModel.loadMedia()
+        advanceUntilIdle()
+
+        gallery = gallery - deleted
+        viewModel.refreshIfGalleryChanged()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.items.paths()).containsExactlyElementsIn(gallery.paths()).inOrder()
+    }
+
+    @Test
+    fun `returning after replaced media reloads media without notification`() = runTest {
+        gallery = listOf(photo(2), photo(1))
+        val viewModel = createViewModel()
+        viewModel.loadMedia()
+        advanceUntilIdle()
+
+        gallery = listOf(photo(3), gallery[0])
+        viewModel.refreshIfGalleryChanged()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.items.paths()).containsExactlyElementsIn(gallery.paths()).inOrder()
+    }
+
+    @Test
+    fun `returning when gallery check fails keeps media`() = runTest {
+        gallery = listOf(photo(1), photo(2))
+        val viewModel = createViewModel()
+        viewModel.loadMedia()
+        advanceUntilIdle()
+
+        isQueryFailing = true
+        viewModel.refreshIfGalleryChanged()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.items.paths()).containsExactlyElementsIn(gallery.paths()).inOrder()
+        verifyFullGalleryQueries(count = 1)
+    }
+
+    @Test
+    fun `returning before first load does not query gallery`() = runTest {
+        gallery = listOf(photo(1))
+        val viewModel = createViewModel()
+
+        viewModel.refreshIfGalleryChanged()
+        advanceUntilIdle()
+
+        verify(provider, never()).query(any(), any(), any(), anyOrNull(), anyOrNull())
+    }
+
+    private fun verifyFullGalleryQueries(count: Int) {
+        verify(provider, times(count)).query(
+            any(),
+            argThat { FileColumns.DATA in this },
+            any(),
+            anyOrNull(),
+            anyOrNull()
+        )
     }
 
     private fun TestScope.createViewModel(

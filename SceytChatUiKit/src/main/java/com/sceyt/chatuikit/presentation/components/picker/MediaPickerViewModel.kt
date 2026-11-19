@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 data class MediaPickerState(
@@ -61,6 +62,7 @@ class MediaPickerViewModel(
         ?.toMutableSet() ?: preselectedPaths.toMutableSet()
     private var loadJob: Job? = null
     private var isLoadStarted = false
+    private var loadedSnapshot: GallerySnapshot? = null
 
     private val galleryObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
@@ -73,6 +75,19 @@ class MediaPickerViewModel(
         isLoadStarted = true
         contentResolver.registerContentObserver(QUERY_URI, true, galleryObserver)
         reload()
+    }
+
+    fun refreshIfGalleryChanged() {
+        if (!_state.value.isLoaded || loadJob?.isActive == true) return
+
+        viewModelScope.launch {
+            val snapshot = withContext(ioDispatcher) {
+                queryGallerySnapshot()
+            }
+            if (snapshot != null && snapshot != loadedSnapshot) {
+                reload()
+            }
+        }
     }
 
     fun toggleSelection(media: MediaData): Boolean {
@@ -119,7 +134,31 @@ class MediaPickerViewModel(
                 selected.keys.retainAll(loadedPaths)
                 publish(newItems = items, allItems = items)
             }
+            loadedSnapshot = items.toSnapshot()
             _state.update { it.copy(isLoaded = true) }
+        }
+    }
+
+    private fun List<MediaItem>.toSnapshot(): GallerySnapshot {
+        val maxId = maxOfOrNull { ContentUris.parseId(it.media.contentUri) } ?: 0L
+        return GallerySnapshot(count = size, maxId = maxId)
+    }
+
+    private fun queryGallerySnapshot(): GallerySnapshot? {
+        return try {
+            val selection = getSelection(filterType)
+            val cursor = contentResolver.query(QUERY_URI, SNAPSHOT_PROJECTION, selection, null, null)
+            cursor?.use {
+                val idIndex = it.getColumnIndexOrThrow(Files.FileColumns._ID)
+                var maxId = 0L
+                while (it.moveToNext()) {
+                    maxId = maxOf(maxId, it.getLong(idIndex))
+                }
+                GallerySnapshot(count = it.count, maxId = maxId)
+            }
+        } catch (e: Exception) {
+            SceytLog.e(TAG, e.message.toString())
+            null
         }
     }
 
@@ -209,6 +248,8 @@ class MediaPickerViewModel(
         contentResolver.unregisterContentObserver(galleryObserver)
     }
 
+    private data class GallerySnapshot(val count: Int, val maxId: Long)
+
     private companion object {
         const val CHUNK_SIZE = 150
         const val KEY_SELECTED_PATHS = "selectedPaths"
@@ -221,5 +262,6 @@ class MediaPickerViewModel(
             Files.FileColumns.MEDIA_TYPE,
             Video.Media.DURATION
         )
+        val SNAPSHOT_PROJECTION = arrayOf(Files.FileColumns._ID)
     }
 }
