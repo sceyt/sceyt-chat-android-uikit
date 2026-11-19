@@ -11,8 +11,10 @@ import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle
+import com.sceyt.chatuikit.styles.common.EmptyStateStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.common.buildEmptyStateStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -25,6 +27,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property countTextStyle Style for the count of selected items.
  * @property countBackgroundStyle Style for the count of selected items.
  * @property itemStyle Style for the media item.
+ * @property emptyStateStyle Style for the empty state shown when the gallery has no photos or videos.
  * */
 data class MediaPickerStyle(
         @param:ColorInt val backgroundColor: Int,
@@ -34,6 +37,7 @@ data class MediaPickerStyle(
         val confirmButtonStyle: ButtonStyle,
         val countBackgroundStyle: BackgroundStyle,
         val itemStyle: MediaPickerItemStyle,
+        val emptyStateStyle: EmptyStateStyle,
 ) {
 
     companion object {
@@ -77,6 +81,13 @@ data class MediaPickerStyle(
 
             val itemStyle = MediaPickerItemStyle.Builder(context, attributeSet).build()
 
+            val emptyStateStyle = buildEmptyStateStyle(
+                context = context,
+                iconRes = R.drawable.sceyt_ic_gallery,
+                titleText = context.getString(R.string.sceyt_no_gallery_media_title),
+                subtitleText = context.getString(R.string.sceyt_no_gallery_media_desc)
+            )
+
             return MediaPickerStyle(
                 backgroundColor = backgroundColor,
                 titleText = titleText,
@@ -84,7 +95,8 @@ data class MediaPickerStyle(
                 confirmButtonStyle = confirmButtonStyle,
                 countTextStyle = countTextStyle,
                 countBackgroundStyle = countBackgroundStyle,
-                itemStyle = itemStyle
+                itemStyle = itemStyle,
+                emptyStateStyle = emptyStateStyle
             ).let { styleCustomizer.apply(context, it) }
         }
     }
