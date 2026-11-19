@@ -309,6 +309,7 @@ class MediaPickerViewModelTest {
         advanceUntilIdle()
 
         verifyFullGalleryQueries(count = 1)
+        verifySnapshotQueries(count = 1)
     }
 
     @Test
@@ -366,10 +367,65 @@ class MediaPickerViewModelTest {
         verify(provider, never()).query(any(), any(), any(), anyOrNull(), anyOrNull())
     }
 
+    @Test
+    fun `returning after swapped media with same count and newest id reloads media`() = runTest {
+        val kept = photo(9)
+        gallery = listOf(kept, photo(1))
+        val viewModel = createViewModel()
+        viewModel.loadMedia()
+        advanceUntilIdle()
+
+        gallery = listOf(kept, photo(2))
+        viewModel.refreshIfGalleryChanged()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.items.paths()).containsExactlyElementsIn(gallery.paths()).inOrder()
+    }
+
+    @Test
+    fun `returning after failed first load retries loading`() = runTest {
+        gallery = listOf(photo(1), photo(2))
+        isQueryFailing = true
+        val viewModel = createViewModel()
+        viewModel.loadMedia()
+        advanceUntilIdle()
+
+        isQueryFailing = false
+        viewModel.refreshIfGalleryChanged()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.isLoaded).isTrue()
+        assertThat(viewModel.state.value.items.paths()).containsExactlyElementsIn(gallery.paths()).inOrder()
+    }
+
+    @Test
+    fun `preselected media with deleted file is not selected after first load`() = runTest {
+        val deleted = photo(1)
+        gallery = listOf(deleted, photo(2))
+        File(deleted.path).delete()
+        val viewModel = createViewModel(preselectedPaths = listOf(deleted.path))
+
+        viewModel.loadMedia()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.selectedCount).isEqualTo(0)
+        assertThat(viewModel.getSelectedMedia()).isEmpty()
+    }
+
     private fun verifyFullGalleryQueries(count: Int) {
         verify(provider, times(count)).query(
             any(),
             argThat { FileColumns.DATA in this },
+            any(),
+            anyOrNull(),
+            anyOrNull()
+        )
+    }
+
+    private fun verifySnapshotQueries(count: Int) {
+        verify(provider, times(count)).query(
+            any(),
+            argThat { FileColumns.DATA !in this },
             any(),
             anyOrNull(),
             anyOrNull()

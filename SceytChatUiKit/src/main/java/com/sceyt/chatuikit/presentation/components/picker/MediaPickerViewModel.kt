@@ -78,12 +78,18 @@ class MediaPickerViewModel(
     }
 
     fun refreshIfGalleryChanged() {
-        if (!_state.value.isLoaded || loadJob?.isActive == true) return
+        if (!isLoadStarted || loadJob?.isActive == true) return
+        if (!_state.value.isLoaded) {
+            reload()
+            return
+        }
 
         viewModelScope.launch {
             val snapshot = withContext(ioDispatcher) {
                 queryGallerySnapshot()
             }
+            if (loadJob?.isActive == true) return@launch
+
             if (snapshot != null && snapshot != loadedSnapshot) {
                 reload()
             }
@@ -127,11 +133,13 @@ class MediaPickerViewModel(
             }
             if (isFailed) return@launch
 
-            if (!isFirstLoad) {
-                val loadedPaths = items
-                    .filterNot { it.media.isWrong }
-                    .mapTo(HashSet()) { it.media.realPath }
-                selected.keys.retainAll(loadedPaths)
+            val loadedPaths = items
+                .filterNot { it.media.isWrong }
+                .mapTo(HashSet()) { it.media.realPath }
+            selected.keys.retainAll(loadedPaths)
+            if (isFirstLoad) {
+                onSelectionChanged()
+            } else {
                 publish(newItems = items, allItems = items)
             }
             loadedSnapshot = items.toSnapshot()
@@ -140,8 +148,8 @@ class MediaPickerViewModel(
     }
 
     private fun List<MediaItem>.toSnapshot(): GallerySnapshot {
-        val maxId = maxOfOrNull { ContentUris.parseId(it.media.contentUri) } ?: 0L
-        return GallerySnapshot(count = size, maxId = maxId)
+        val idSum = sumOf { ContentUris.parseId(it.media.contentUri) }
+        return GallerySnapshot(count = size, idSum = idSum)
     }
 
     private fun queryGallerySnapshot(): GallerySnapshot? {
@@ -150,11 +158,11 @@ class MediaPickerViewModel(
             val cursor = contentResolver.query(QUERY_URI, SNAPSHOT_PROJECTION, selection, null, null)
             cursor?.use {
                 val idIndex = it.getColumnIndexOrThrow(Files.FileColumns._ID)
-                var maxId = 0L
+                var idSum = 0L
                 while (it.moveToNext()) {
-                    maxId = maxOf(maxId, it.getLong(idIndex))
+                    idSum += it.getLong(idIndex)
                 }
-                GallerySnapshot(count = it.count, maxId = maxId)
+                GallerySnapshot(count = it.count, idSum = idSum)
             }
         } catch (e: Exception) {
             SceytLog.e(TAG, e.message.toString())
@@ -248,7 +256,7 @@ class MediaPickerViewModel(
         contentResolver.unregisterContentObserver(galleryObserver)
     }
 
-    private data class GallerySnapshot(val count: Int, val maxId: Long)
+    private data class GallerySnapshot(val count: Int, val idSum: Long)
 
     private companion object {
         const val CHUNK_SIZE = 150
