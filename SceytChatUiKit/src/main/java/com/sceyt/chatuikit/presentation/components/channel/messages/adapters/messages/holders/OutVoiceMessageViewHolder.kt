@@ -213,16 +213,17 @@ class OutVoiceMessageViewHolder(
             }
 
             isCurrent && state.status != AudioPlayerStatus.Stopped -> {
-                val duration = state.duration.takeIf { it > 0 }
-                    ?: fileItem.duration?.times(1000L)
-                    ?: 0
+                val metadataDuration = fileItem.duration?.times(1000L)
+                val duration = state.duration.takeIf { it > 0 } ?: metadataDuration ?: 0L
                 binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
                     state.position,
                     duration
                 )
+                val displayedDuration = if (state.status == AudioPlayerStatus.Completed)
+                    metadataDuration ?: duration else state.position
                 binding.voiceDuration.text = style.voiceDurationFormatter.format(
                     context,
-                    if (state.status == AudioPlayerStatus.Completed) duration else state.position
+                    displayedDuration
                 )
                 currentPlaybackSpeed = fromValue(state.speed)
                 val controlsEnabled = state.status == AudioPlayerStatus.Playing ||
