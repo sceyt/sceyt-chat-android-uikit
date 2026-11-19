@@ -70,6 +70,11 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel.refreshIfGalleryChanged()
+    }
+
     private fun createViewModelFactory(): ViewModelProvider.Factory {
         val maxSelectCount = arguments?.getInt(MAX_SELECTION_COUNT) ?: MAX_SELECT_MEDIA_COUNT
         val preselectedPaths = arguments?.getStringArray(STATE_SELECTION)
