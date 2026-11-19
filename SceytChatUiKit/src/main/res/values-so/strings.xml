@@ -166,6 +166,8 @@
     <string name="sceyt_delete_messages_body">Are you sure you want to delete these messages?</string>
     <string name="sceyt_no_media_title">No media</string>
     <string name="sceyt_no_media_desc">Shared media will appear here.</string>
+    <string name="sceyt_no_gallery_media_title">No photos or videos</string>
+    <string name="sceyt_no_gallery_media_desc">Photos and videos saved to your device will appear here.</string>
     <string name="sceyt_no_files_title">No files</string>
     <string name="sceyt_no_files_desc">Shared files will appear here.</string>
     <string name="sceyt_no_voices_title">No voice messages</string>
