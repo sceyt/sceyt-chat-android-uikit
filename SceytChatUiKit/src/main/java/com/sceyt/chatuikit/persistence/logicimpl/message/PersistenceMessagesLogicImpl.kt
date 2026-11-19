@@ -114,6 +114,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -594,10 +595,7 @@ internal class PersistenceMessagesLogicImpl(
 
             is SceytResponse.Error -> {
                 channelCache.upsertPendingChannel(updated)
-                return callbackFlow {
-                    trySend(SendMessageResult.Error(SceytResponse.Error(response.exception)))
-                    this.channel.close()
-                }
+                return flowOf(SendMessageResult.Error(SceytResponse.Error(response.exception)))
             }
         }
     }
@@ -721,7 +719,7 @@ internal class PersistenceMessagesLogicImpl(
         isPendingMessage: Boolean,
         isUploadedAttachments: Boolean,
         emitTmpMessageAndStore: Boolean = true,
-    ) = callbackFlow {
+    ): Flow<SendMessageResult> = flow {
         // If message is pending, we don't need to insert it to db and emit it to UI as outgoing message
         if (!isPendingMessage && !isUploadedAttachments && emitTmpMessageAndStore)
             emitTmpMessageAndStore(channelId, message)
@@ -734,7 +732,7 @@ internal class PersistenceMessagesLogicImpl(
                 isSharing = isSharing
             ).await()
             attachmentDao.markUploadQueued(message.tid)
-            trySend(SendMessageResult.StartedSendingAttachment)
+            emit(SendMessageResult.StartedSendingAttachment)
         } else {
             val linkedMessage = message.copy(
                 attachments = message.attachments?.withPreviewLink(
@@ -743,10 +741,8 @@ internal class PersistenceMessagesLogicImpl(
             )
             val response = messagesRepository.sendMessage(channelId, linkedMessage)
             onMessageSentResponse(channelId, response, linkedMessage)
-            trySend(response.toSendMessageResult())
+            emit(response.toSendMessageResult())
         }
-        channel.close()
-        awaitClose()
     }.flowOn(dispatcherIO)
 
     private fun tmpMessageToSceytMessage(
