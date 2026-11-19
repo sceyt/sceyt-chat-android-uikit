@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildAvatarStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildBodyTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeletedMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeliveryStatusIconStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildOverlayDeliveryStatusIconStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildForwardTitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingBubbleBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingFileMediaThumbPlaceholder
@@ -95,6 +96,7 @@ import java.util.Date
  * @property viewCountIcon Icon for the view count, default is [R.drawable.sceyt_ic_display_count]
  * @property pinnedIcon Shown beside the timestamp while the message is pinned, default is [R.drawable.sceyt_ic_pin_message]
  * @property messageDeliveryStatusIcons Icons for the message delivery status.
+ * @property overlayMessageDeliveryStatusIcons Icons for the message delivery status drawn over media, default is [buildOverlayDeliveryStatusIconStyle].
  * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
  * @property deletedStateText Title for the deleted state, default is [R.string.sceyt_message_was_deleted].
  * @property forwardedText Title for the forwarded message, default is [R.string.sceyt_forwarded_message].
@@ -163,6 +165,7 @@ data class MessageItemStyle(
     val deletedStateText: String,
     val forwardedText: String,
     val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
+    val overlayMessageDeliveryStatusIcons: MessageDeliveryStatusIcons,
     val readMoreStyle: ReadMoreStyle,
     val bodyTextStyle: TextStyle,
     val deletedMessageTextStyle: TextStyle,
@@ -319,6 +322,7 @@ data class MessageItemStyle(
                     deletedStateText = deletedStateText,
                     forwardedText = forwardedText,
                     messageDeliveryStatusIcons = buildDeliveryStatusIconStyle(array),
+                    overlayMessageDeliveryStatusIcons = buildOverlayDeliveryStatusIconStyle(array),
                     readMoreStyle = buildReadMoreStyle(array),
                     bodyTextStyle = buildBodyTextStyle(array),
                     deletedMessageTextStyle = buildDeletedMessageTextStyle(array),
