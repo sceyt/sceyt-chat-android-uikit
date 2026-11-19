@@ -104,6 +104,7 @@
     <string name="sceyt_gallery">galerie</string>
     <string name="sceyt_this_unsupported_file_format">le format de ce fichier est insupportable</string>
     <string name="sceyt_unsupported_file_format">le format de ce fichier est insupportable</string>
+    <string name="sceyt_missing_attachments_removed">Certaines pièces jointes ont été supprimées car les fichiers n\'existent plus</string>
     <string name="sceyt_you_can_select_max">Le nombre maximal de sélections doit être inférieur à</string>
     <string name="sceyt_video">Vidéo</string>
     <string name="sceyt_image">image</string>
@@ -165,6 +166,8 @@
     <string name="sceyt_delete_messages_body">Voulez-vous vraiment supprimer ces messages ?</string>
     <string name="sceyt_no_media_title">Aucun média</string>
     <string name="sceyt_no_media_desc">Les médias partagés apparaîtront ici.</string>
+    <string name="sceyt_no_gallery_media_title">Aucune photo ni vidéo</string>
+    <string name="sceyt_no_gallery_media_desc">Les photos et vidéos enregistrées sur votre appareil apparaîtront ici.</string>
     <string name="sceyt_no_files_title">Aucun fichier</string>
     <string name="sceyt_no_files_desc">Les fichiers partagés apparaîtront ici.</string>
     <string name="sceyt_no_voices_title">Aucun message vocal</string>

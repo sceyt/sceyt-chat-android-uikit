@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.styles.extensions.common
 
 import androidx.core.view.isVisible
+import com.sceyt.chatuikit.databinding.SceytChannelListEmptyStateBinding
 import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.EmptyStateStyle
@@ -26,5 +27,26 @@ fun SceytEmptyStateBinding.applyStyle(
     if (!style.subtitleText.isNullOrEmpty()) {
         subtitle.text = style.subtitleText
         style.subtitleStyle.apply(subtitle)
+    }
+}
+
+fun SceytChannelListEmptyStateBinding.applyStyle(
+    style: EmptyStateStyle
+) {
+    image.isVisible = style.icon != null
+    if (style.icon != null) {
+        image.setImageDrawable(style.icon)
+        if (style.iconTint != UNSET_COLOR) {
+            image.setColorFilter(style.iconTint)
+        } else {
+            image.clearColorFilter()
+        }
+    }
+    tvTitle.text = style.titleText
+    style.titleStyle.apply(tvTitle)
+    tvDescription.isVisible = !style.subtitleText.isNullOrEmpty()
+    if (!style.subtitleText.isNullOrEmpty()) {
+        tvDescription.text = style.subtitleText
+        style.subtitleStyle.apply(tvDescription)
     }
 }

@@ -114,6 +114,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -593,10 +595,7 @@ internal class PersistenceMessagesLogicImpl(
 
             is SceytResponse.Error -> {
                 channelCache.upsertPendingChannel(updated)
-                return callbackFlow {
-                    trySend(SendMessageResult.Error(SceytResponse.Error(response.exception)))
-                    this.channel.close()
-                }
+                return flowOf(SendMessageResult.Error(SceytResponse.Error(response.exception)))
             }
         }
     }
@@ -720,7 +719,7 @@ internal class PersistenceMessagesLogicImpl(
         isPendingMessage: Boolean,
         isUploadedAttachments: Boolean,
         emitTmpMessageAndStore: Boolean = true,
-    ) = callbackFlow {
+    ): Flow<SendMessageResult> = flow {
         // If message is pending, we don't need to insert it to db and emit it to UI as outgoing message
         if (!isPendingMessage && !isUploadedAttachments && emitTmpMessageAndStore)
             emitTmpMessageAndStore(channelId, message)
@@ -733,7 +732,7 @@ internal class PersistenceMessagesLogicImpl(
                 isSharing = isSharing
             ).await()
             attachmentDao.markUploadQueued(message.tid)
-            trySend(SendMessageResult.StartedSendingAttachment)
+            emit(SendMessageResult.StartedSendingAttachment)
         } else {
             val linkedMessage = message.copy(
                 attachments = message.attachments?.withPreviewLink(
@@ -742,11 +741,9 @@ internal class PersistenceMessagesLogicImpl(
             )
             val response = messagesRepository.sendMessage(channelId, linkedMessage)
             onMessageSentResponse(channelId, response, linkedMessage)
-            trySend(response.toSendMessageResult())
+            emit(response.toSendMessageResult())
         }
-        channel.close()
-        awaitClose()
-    }
+    }.flowOn(dispatcherIO)
 
     private fun tmpMessageToSceytMessage(
         channelId: Long,
@@ -827,7 +824,7 @@ internal class PersistenceMessagesLogicImpl(
                     "Send message non-resendable error: ${exception?.message}, errorType: ${errorType.value}" +
                             "deleting message from db channel id $channelId, tid:${message.tid} id:${message.id}"
                 )
-                messageDao.deleteMessageByTid(message.tid)
+                deleteMessageLocally(channelId, message, MessageState.DeletedHard)
             }
         }
     }
@@ -983,7 +980,6 @@ internal class PersistenceMessagesLogicImpl(
             ?: getMessageFromDbByTid(message.tid)
             ?: message
         if (storedMessage.isPending()) {
-            val clonedMessage = message.copy(state = MessageState.Deleted)
             runCatchingCancellable {
                 UploadAndSendAttachmentWorkManager.cancelWorksByTag(
                     context = context,
@@ -995,9 +991,7 @@ internal class PersistenceMessagesLogicImpl(
             storedMessage.attachments?.forEach {
                 fileTransferService.cancelUpload(it)
             }
-            messageDao.deleteMessageByTid(message.tid)
-            messagesCache.hardDeleteMessage(channelId, message)
-            persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
+            val deletedMessage = deleteMessageLocally(channelId, message, MessageState.Deleted)
             // The send request may already have reached the server, so persist a delete-by-tid
             // intent (retried on reconnect) and attempt to delete it on the server now.
             pendingMessageDeleteByTidDao.insert(
@@ -1009,7 +1003,7 @@ internal class PersistenceMessagesLogicImpl(
                 )
             )
             deleteMessageByTidImpl(channelId, message.tid, DeleteHard)
-            return@withContext SceytResponse.Success(clonedMessage)
+            return@withContext SceytResponse.Success(deletedMessage)
         }
 
         // Insert pending message state
@@ -1068,6 +1062,18 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         return response
+    }
+
+    private suspend fun deleteMessageLocally(
+        channelId: Long,
+        message: SceytMessage,
+        deletedState: MessageState,
+    ): SceytMessage {
+        val deletedMessage = message.copy(channelId = channelId, state = deletedState)
+        messageDao.deleteMessageByTid(message.tid)
+        messagesCache.hardDeleteMessage(channelId, message)
+        persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
+        return deletedMessage
     }
 
     private suspend fun deleteMessageImpl(

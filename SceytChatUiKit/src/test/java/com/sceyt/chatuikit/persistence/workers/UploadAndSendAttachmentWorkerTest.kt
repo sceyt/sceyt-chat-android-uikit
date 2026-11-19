@@ -80,6 +80,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -129,6 +130,8 @@ class UploadAndSendAttachmentWorkerTest {
 
     private val context: Context = RuntimeEnvironment.getApplication()
     private val messageLogic = mock<PersistenceMessagesLogic>()
+    private val sendOrderDao = mock<MessageDao>()
+    private val uploadWorkStates = mutableMapOf<Long, MutableStateFlow<List<WorkInfo>>>()
     private val workManager = mock<WorkManagerImpl>()
     private val transport = RecordingFileTransferProvider()
     private val previewTransfer = mock<AttachmentPreviewTransfer>()
@@ -192,10 +195,15 @@ class UploadAndSendAttachmentWorkerTest {
         whenever(messageLogic.sendMessageWithUploadedAttachments(any(), any()))
             .thenReturn(SceytResponse.Success(null))
         whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Unavailable)
+        whenever(sendOrderDao.getPreviousPendingMessageTids(any())).thenReturn(emptyList())
+        whenever(workManager.getWorkInfosForUniqueWorkFlow(any())).thenAnswer {
+            uploadWorkState(it.getArgument<String>(0).toLong())
+        }
         stopKoin()
         SceytKoinApp.koinApp = startKoin {
             modules(module {
                 single { AttachmentUploadLock() }
+                single { AttachmentSendOrder(context, sendOrderDao) }
                 single<FileTransferService> { service }
                 single<PersistenceAttachmentLogic> { attachmentLogic }
                 single<PersistenceMessagesLogic> { messageLogic }
@@ -361,6 +369,58 @@ class UploadAndSendAttachmentWorkerTest {
             releasePreview.complete(Unit)
             videoWork.cancelAndJoin()
             nextWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `later message waits for previous unfinished uploads in its chat`() = runBlocking {
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L)
+        val third = first.copy(messageTid = 12L)
+        whenever(sendOrderDao.getPreviousPendingMessageTids(second.messageTid))
+            .thenReturn(listOf(first.messageTid))
+        whenever(sendOrderDao.getPreviousPendingMessageTids(third.messageTid))
+            .thenReturn(listOf(first.messageTid, second.messageTid))
+        uploadWorkState(first.messageTid).value = listOf(uploadWork(WorkInfo.State.ENQUEUED))
+        uploadWorkState(second.messageTid).value = listOf(uploadWork(WorkInfo.State.ENQUEUED))
+        val firstWorker = worker(first)
+        val secondWorker = worker(second)
+        val thirdWorker = worker(third)
+
+        val thirdWork = testScope.async { thirdWorker.doWork() }
+        val secondWork = testScope.async { secondWorker.doWork() }
+        assertThat(transport.uploadCalls).isEmpty()
+        val firstWork = testScope.async { firstWorker.doWork() }
+        try {
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid)
+                .isEqualTo(first.messageTid)
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+            assertThat(transport.uploadCalls).hasSize(1)
+
+            uploadWorkState(first.messageTid).value = listOf(uploadWork(WorkInfo.State.SUCCEEDED))
+            testScope.testScheduler.runCurrent()
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid)
+                .isEqualTo(second.messageTid)
+            transport.uploadCalls.last().succeed("second-url")
+            assertThat(secondWork.isCompleted).isTrue()
+            assertThat(transport.uploadCalls).hasSize(2)
+
+            uploadWorkState(second.messageTid).value = listOf(uploadWork(WorkInfo.State.SUCCEEDED))
+            testScope.testScheduler.runCurrent()
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid)
+                .isEqualTo(third.messageTid)
+            transport.uploadCalls.last().succeed("third-url")
+            assertThat(thirdWork.isCompleted).isTrue()
+
+            val sent = argumentCaptor<Message>()
+            verify(messageLogic, times(3)).sendMessageWithUploadedAttachments(any(), sent.capture())
+            assertThat(sent.allValues.map { it.tid })
+                .containsExactly(first.messageTid, second.messageTid, third.messageTid).inOrder()
+        } finally {
+            firstWork.cancelAndJoin()
+            secondWork.cancelAndJoin()
+            thirdWork.cancelAndJoin()
         }
     }
 
@@ -2009,6 +2069,12 @@ class UploadAndSendAttachmentWorkerTest {
             .containsExactlyElementsIn(expected.map { it.first to it.second.value })
             .inOrder()
     }
+
+    private fun uploadWorkState(messageTid: Long): MutableStateFlow<List<WorkInfo>> =
+        uploadWorkStates.getOrPut(messageTid) { MutableStateFlow(emptyList()) }
+
+    private fun uploadWork(state: WorkInfo.State): WorkInfo =
+        mock<WorkInfo>().also { whenever(it.state).thenReturn(state) }
 
     private fun worker(
         attachment: SceytAttachment,

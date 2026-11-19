@@ -115,6 +115,7 @@
     <string name="sceyt_gallery">المعرض</string>
     <string name="sceyt_this_unsupported_file_format">تنسيق الملف غير مدعوم</string>
     <string name="sceyt_unsupported_file_format">تنسيق الملف غير مدعوم</string>
+    <string name="sceyt_missing_attachments_removed">تمت إزالة بعض المرفقات لأن الملفات لم تعد موجودة</string>
     <string name="sceyt_you_can_select_max">يمكنك تحديد حد أقصى %s</string>
     <string name="sceyt_video">فيديو</string>
     <string name="sceyt_image">صورة</string>
@@ -234,6 +235,8 @@
     <string name="sceyt_message_self_destructed">تدمير ذاتي للرسالة</string>
     <string name="sceyt_no_media_title">لا توجد وسائط</string>
     <string name="sceyt_no_media_desc">ستظهر الوسائط المشتركة هنا.</string>
+    <string name="sceyt_no_gallery_media_title">لا توجد صور أو فيديوهات</string>
+    <string name="sceyt_no_gallery_media_desc">ستظهر هنا الصور والفيديوهات المحفوظة على جهازك.</string>
     <string name="sceyt_no_files_title">لا توجد ملفات</string>
     <string name="sceyt_no_files_desc">ستظهر الملفات المشتركة هنا.</string>
     <string name="sceyt_no_voices_title">لا توجد رسائل صوتية</string>
