@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.message.PendingSendRegistry
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -65,6 +66,7 @@ class SendPendingMessagesUseCaseTest {
         assertThat(sent).containsExactly(1L, 2L).inOrder()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `a message being sent is skipped by a concurrent call`() = runTest(dispatcher) {
         givenPending(pendingMessage(tid = 1L))
@@ -80,6 +82,7 @@ class SendPendingMessagesUseCaseTest {
         assertThat(sent).containsExactly(1L)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `a message sent by an earlier call is not resent from a stale list`() = runTest(dispatcher) {
         givenPending(pendingMessage(tid = 1L), pendingMessage(tid = 2L))
