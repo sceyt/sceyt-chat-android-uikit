@@ -312,6 +312,18 @@ internal fun MessageItemStyle.Builder.buildDeliveryStatusIconStyle(
     .setFailedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusFailedIcon)
     .build()
 
+internal fun MessageItemStyle.Builder.buildOverlayDeliveryStatusIconStyle(
+    typedArray: TypedArray,
+): MessageDeliveryStatusIcons {
+    val contentColor = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    val icons = buildDeliveryStatusIconStyle(typedArray)
+    return icons.copy(
+        pendingIcon = icons.pendingIcon.applyTint(contentColor),
+        sentIcon = icons.sentIcon.applyTint(contentColor),
+        receivedIcon = icons.receivedIcon.applyTint(contentColor),
+    )
+}
+
 /* Item Body text style */
 internal fun MessageItemStyle.Builder.buildBodyTextStyle(
     typedArray: TypedArray,

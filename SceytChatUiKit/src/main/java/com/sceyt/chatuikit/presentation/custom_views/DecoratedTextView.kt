@@ -7,7 +7,6 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.text.Layout
 import android.text.SpannableStringBuilder
 import android.text.StaticLayout
@@ -48,8 +47,11 @@ class DecoratedTextView @JvmOverloads constructor(
     private var enableLeadingText = false
     private var ignoreRtl: Boolean = false
     private var cornerRadius: Int = 30
-    private var isHighlighted = false
+    private var highlighted = false
     private var backgroundRectF: RectF = RectF()
+
+    val isHighlighted: Boolean
+        get() = highlighted
 
     @ColorInt
     private var overlayColor: Int = context.getCompatColor(R.color.sceyt_color_overlay_background)
@@ -148,9 +150,9 @@ class DecoratedTextView @JvmOverloads constructor(
                     R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIconSize,
                     trailingIconSize
                 )
-                isHighlighted = array.getBoolean(
+                highlighted = array.getBoolean(
                     R.styleable.DecoratedTextView_sceytUiDecoratedTextHighlighted,
-                    isHighlighted
+                    highlighted
                 )
                 ignoreRtl = array.getBoolean(
                     R.styleable.DecoratedTextView_sceytUiDecoratedTextIgnoreRtl,
@@ -163,9 +165,7 @@ class DecoratedTextView @JvmOverloads constructor(
     }
 
     private fun init() {
-        setHighlightedState(isHighlighted)
-
-        backgroundPaint.color = bgColor
+        backgroundPaint.color = if (highlighted) overlayColor else bgColor
         backgroundPaint.style = Paint.Style.FILL
 
         initStaticLayout()
@@ -183,7 +183,7 @@ class DecoratedTextView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        if (bgColor != 0)
+        if (backgroundPaint.color != 0)
             drawBackground(canvas)
 
         if (isRtl && !ignoreRtl) {
@@ -326,47 +326,28 @@ class DecoratedTextView @JvmOverloads constructor(
             .build()
     }
 
-    private fun setHighlightedState(highlighted: Boolean) {
-        if (highlighted) {
-            setPadding(7.dpToPx(), 2.dpToPx(), 5.dpToPx(), 2.dpToPx())
-            bgColor = overlayColor
-        } else {
-            background = null
-        }
-    }
-
     private fun initText(text: CharSequence): SpannableStringBuilder {
-        var tvStyle = textStyle
-        var ldStyle = leadingTextStyle
-        if (isHighlighted) {
-            tvStyle = textStyle.copy(color = Color.WHITE)
-            ldStyle = leadingTextStyle.copy(color = Color.WHITE)
-        }
         return if (enableLeadingText) {
             val str = SpannableStringBuilder("$leadingText  $text")
-            ldStyle.apply(context, str, 0, leadingText.length)
-            tvStyle.apply(context, str, leadingText.length + 2, str.length)
+            leadingTextStyle.apply(context, str, 0, leadingText.length)
+            textStyle.apply(context, str, leadingText.length + 2, str.length)
             str
         } else SpannableStringBuilder(text).apply {
-            tvStyle.apply(context, this)
+            textStyle.apply(context, this)
         }
     }
 
     private val realPaddingStart
-        get() = if (isHighlighted && paddingStart == 0)
-            highlightedStatePaddings[0] else paddingStart
+        get() = if (highlighted) highlightedStatePaddings[0] else paddingStart
 
     private val realPaddingEnd
-        get() = if (isHighlighted && paddingEnd == 0)
-            highlightedStatePaddings[2] else paddingEnd
+        get() = if (highlighted) highlightedStatePaddings[2] else paddingEnd
 
     private val realPaddingTop
-        get() = if (isHighlighted && paddingTop == 0)
-            highlightedStatePaddings[1] else paddingTop
+        get() = if (highlighted) highlightedStatePaddings[1] else paddingTop
 
     private val realPaddingBottom
-        get() = if (isHighlighted && paddingBottom == 0)
-            highlightedStatePaddings[3] else paddingBottom
+        get() = if (highlighted) highlightedStatePaddings[3] else paddingBottom
 
     private val heightWithoutPaddingVertical
         get() = height - realPaddingBottom - realPaddingTop
@@ -390,16 +371,9 @@ class DecoratedTextView @JvmOverloads constructor(
     fun setIcons(
         leadingIcon: Drawable? = null,
         trailingIcon: Drawable? = null,
-        ignoreHighlight: Boolean = false
     ) {
-        var leading = leadingIcon
-        var trailing = trailingIcon
-        if (isHighlighted && !ignoreHighlight) {
-            leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-            trailing = trailingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-        }
-        this.leadingIcon = leading
-        this.trailingIcon = trailing
+        this.leadingIcon = leadingIcon
+        this.trailingIcon = trailingIcon
         init()
         requestLayout()
         invalidate()
@@ -421,9 +395,10 @@ class DecoratedTextView @JvmOverloads constructor(
     }
 
     fun setHighlighted(highlighted: Boolean) {
-        if (isHighlighted == highlighted) return
-        isHighlighted = highlighted
+        if (this.highlighted == highlighted) return
+        this.highlighted = highlighted
         init()
+        requestLayout()
         invalidate()
     }
 
@@ -459,28 +434,19 @@ class DecoratedTextView @JvmOverloads constructor(
         val leadingText: CharSequence = this@DecoratedTextView.leadingText,
         val leadingTextStyle: TextStyle = this@DecoratedTextView.leadingTextStyle,
         val enableLeadingText: Boolean = this@DecoratedTextView.enableLeadingText,
+        @param:ColorInt val overlayColor: Int = this@DecoratedTextView.overlayColor,
     ) {
-        fun apply(ignoreHighlight: Boolean = false) {
-            var leading = leadingIcon?.mutate()
-            var trailing = trailingIcon?.mutate()
-
-            if (isHighlighted) {
-                leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-                if (!ignoreHighlight)
-                    trailing = trailingIcon?.constantState?.newDrawable()?.apply {
-                        setTint(Color.WHITE)
-                    }
-            }
-
+        fun apply() {
             this@DecoratedTextView.leadingIconSize = leadingIconSize
             this@DecoratedTextView.trailingIconSize = trailingIconSize
-            this@DecoratedTextView.leadingIcon = leading
-            this@DecoratedTextView.trailingIcon = trailing
+            this@DecoratedTextView.leadingIcon = leadingIcon?.mutate()
+            this@DecoratedTextView.trailingIcon = trailingIcon?.mutate()
             this@DecoratedTextView.text = text
             this@DecoratedTextView.textStyle = textStyle
             this@DecoratedTextView.leadingText = leadingText
             this@DecoratedTextView.leadingTextStyle = leadingTextStyle
             this@DecoratedTextView.enableLeadingText = enableLeadingText
+            this@DecoratedTextView.overlayColor = overlayColor
             if (leadingIconPadding != UNSET_SIZE)
                 this@DecoratedTextView.leadingIconPadding = leadingIconPadding
 
@@ -570,7 +536,8 @@ class DecoratedTextView @JvmOverloads constructor(
             textStyle = textStyle,
             leadingText = leadingText,
             leadingTextStyle = leadingTextStyle,
-            enableLeadingText = enableLeadingText
+            enableLeadingText = enableLeadingText,
+            overlayColor = overlayColor
         )
     }
 

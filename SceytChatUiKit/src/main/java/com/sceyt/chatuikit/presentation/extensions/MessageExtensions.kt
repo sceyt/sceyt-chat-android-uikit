@@ -1,10 +1,13 @@
 package com.sceyt.chatuikit.presentation.extensions
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.text.SpannableString
+import androidx.annotation.ColorInt
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
@@ -15,6 +18,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.formatters.Formatter
@@ -58,7 +62,7 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
             .setLeadingIcon(it)
             .enableLeadingText(edited)
             .build()
-            .apply(checkIgnoreHighlight(deliveryStatus))
+            .apply()
 
         decoratedTextView.isVisible = true
     }
@@ -70,24 +74,34 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     dateText: CharSequence,
     edited: Boolean,
 ) {
+    val onOverlay = decoratedTextView.isHighlighted
+    val overlayContentColor =
+        decoratedTextView.context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    val dateTextStyle =
+        itemStyle.messageDateTextStyle.tintForOverlay(onOverlay, overlayContentColor)
+    val stateTextStyle =
+        itemStyle.messageStateTextStyle.tintForOverlay(onOverlay, overlayContentColor)
     val showPin = this?.pinDetails?.isPinned == true && !this.state.isDeletedOrHardDeleted()
-    val pinIcon = itemStyle.pinnedIcon.takeIf { showPin }
+    val pinIcon =
+        itemStyle.pinnedIcon.takeIf { showPin }?.tintForOverlay(onOverlay, overlayContentColor)
 
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
-            .setTextStyle(itemStyle.messageDateTextStyle)
+            .setTextStyle(dateTextStyle)
             .setLeadingIcon(pinIcon)
             .setTrailingIcon(null)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
-            .setLeadingTextStyle(itemStyle.messageStateTextStyle)
+            .setLeadingTextStyle(stateTextStyle)
             .setOverlayColor(itemStyle.onOverlayColor)
             .build()
             .apply()
         return
     }
-    val icons = itemStyle.messageDeliveryStatusIcons
+    val icons = if (onOverlay)
+        itemStyle.overlayMessageDeliveryStatusIcons
+    else itemStyle.messageDeliveryStatusIcons
     val icon = when (deliveryStatus) {
         MessageDeliveryStatus.Pending -> icons.pendingIcon
         MessageDeliveryStatus.Sent -> icons.sentIcon
@@ -98,21 +112,28 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     icon?.let {
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
-            .setTextStyle(itemStyle.messageDateTextStyle)
+            .setTextStyle(dateTextStyle)
             .setLeadingIcon(pinIcon)
             .setTrailingIcon(it)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
-            .setLeadingTextStyle(itemStyle.messageStateTextStyle)
+            .setLeadingTextStyle(stateTextStyle)
             .setOverlayColor(itemStyle.onOverlayColor)
             .build()
-            .apply(checkIgnoreHighlight(deliveryStatus))
+            .apply()
         decoratedTextView.isVisible = true
     }
 }
 
-private fun checkIgnoreHighlight(deliveryStatus: MessageDeliveryStatus?): Boolean {
-    return deliveryStatus == MessageDeliveryStatus.Displayed
+private fun TextStyle.tintForOverlay(onOverlay: Boolean, @ColorInt color: Int): TextStyle {
+    if (!onOverlay) return this
+    return copy(color = color)
+}
+
+private fun Drawable.tintForOverlay(onOverlay: Boolean, @ColorInt color: Int): Drawable {
+    if (!onOverlay) return this
+    val copy = constantState?.newDrawable()?.mutate() ?: return this
+    return copy.apply { setTint(color) }
 }
 
 fun SceytMessage.getFormattedBodyWithAttachments(
