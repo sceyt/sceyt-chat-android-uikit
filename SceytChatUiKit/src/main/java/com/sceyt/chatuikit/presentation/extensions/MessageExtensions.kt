@@ -240,7 +240,7 @@ fun SceytMessage.isNotPending() = !isPending()
  * outlive the message it points at and keep it reachable after it vanished from the timeline.
  */
 fun SceytMessage.isDisappearing() =
-    isTransient || viewOnce || (autoDeleteAt ?: 0L) > 0L
+    isTransient || viewOnce
 
 fun MessageState.isDeletedOrHardDeleted() =
     this == MessageState.Deleted || this == MessageState.DeletedHard
