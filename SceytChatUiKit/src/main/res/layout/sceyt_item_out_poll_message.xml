@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    android:contentDescription="@string/sceyt_cd_outgoing_poll_message" xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:contentDescription="@string/sceyt_cd_outgoing_poll_message"
     android:paddingStart="0dp"
     android:paddingEnd="12dp">
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
-        android:contentDescription="@string/sceyt_cd_select_outgoing_poll_message"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:background="@android:color/transparent"
         android:clickable="false"
+        android:contentDescription="@string/sceyt_cd_select_outgoing_poll_message"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -101,21 +101,24 @@
             android:id="@+id/tvPollType"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="2dp"
             android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/smallTextSize"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvPollQuestion"
             tools:text="Public poll" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvPollOptions"
-            android:contentDescription="@string/sceyt_cd_outgoing_poll_message_poll_options_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="12dp"
+            android:contentDescription="@string/sceyt_cd_outgoing_poll_message_poll_options_list"
             android:nestedScrollingEnabled="false"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintEnd_toEndOf="parent"
@@ -147,7 +150,7 @@
         <Space
             android:layout_width="match_parent"
             android:layout_height="5dp"
-            app:layout_constraintTop_toBottomOf="@+id/messageDate"/>
+            app:layout_constraintTop_toBottomOf="@+id/messageDate" />
 
         <View
             android:id="@+id/divider"
@@ -160,10 +163,10 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvViewResults"
-            android:contentDescription="@string/sceyt_cd_outgoing_poll_message_results"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:selectableItemBackground"
+            android:contentDescription="@string/sceyt_cd_outgoing_poll_message_results"
             android:fontFamily="@font/roboto_medium"
             android:gravity="center"
             android:paddingVertical="15dp"
@@ -178,12 +181,12 @@
 
     <ViewStub
         android:id="@+id/rvReactions"
-        android:contentDescription="@string/sceyt_cd_outgoing_poll_message_reactions_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="-5dp"
         android:layout_marginEnd="3dp"
         android:layout_marginBottom="2dp"
+        android:contentDescription="@string/sceyt_cd_outgoing_poll_message_reactions_list"
         android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -196,10 +199,10 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvReplyCount"
-        android:contentDescription="@string/sceyt_cd_outgoing_poll_message_reply_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="2dp"
+        android:contentDescription="@string/sceyt_cd_outgoing_poll_message_reply_count"
         android:includeFontPadding="false"
         android:paddingVertical="4dp"
         android:textColor="@color/sceyt_color_accent"
