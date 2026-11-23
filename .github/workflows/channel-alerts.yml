@@ -49,6 +49,7 @@ jobs:
             }
             let passedChecks;
             let failedChecks = [];
+            let notRunChecks = [];
             const failedConclusions = ['failure', 'timed_out', 'action_required'];
             try {
               const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
@@ -57,6 +58,9 @@ jobs:
               const checks = jobs.filter(job =>
                 job.name !== 'Slack Alerts' && !job.name.startsWith('Slack Alerts /')
               );
+              notRunChecks = checks.filter(job =>
+                job.conclusion === 'skipped' && ['Unit tests', 'Instrumented tests'].includes(job.name)
+              ).map(job => job.name);
               passedChecks = checks.filter(job => job.conclusion === 'success').map(job => job.name);
               failedChecks = checks.filter(job => failedConclusions.includes(job.conclusion));
               // The aggregate gate repeats the underlying test results.
@@ -72,15 +76,9 @@ jobs:
             const actor = run.triggering_actor?.login || run.actor?.login;
             const checkTitles = new Map([
               ['Check changed Kotlin formatting', 'Kotlin formatting'],
-              ['Require Kotlin formatting to pass', 'Kotlin formatting'],
               ['Check changed SDK line coverage', 'Changed-line coverage']
             ]);
-            const formattingFailed = failedChecks.some(job => job.name === 'Kotlin Formatting');
-            // The required unit check also fails when its formatting prerequisite fails.
-            const headlineChecks = formattingFailed
-              ? failedChecks.filter(job => job.name !== 'Unit tests')
-              : failedChecks;
-            const failureTitles = headlineChecks.flatMap(job => {
+            const failureTitles = failedChecks.flatMap(job => {
               const steps = (job.steps ?? [])
                 .filter(step => failedConclusions.includes(step.conclusion))
                 .map(step => checkTitles.get(step.name) ?? step.name);
@@ -105,6 +103,9 @@ jobs:
                 ...(passedChecks.length ? passedChecks.map(name => `• ${name}`) : ['• None']),
                 ...(failedChecks.length ? [
                   '', '❌ Failed checks', ...failedChecks.map(job => `• ${job.name}`)
+                ] : []),
+                ...(notRunChecks.length ? [
+                  '', '⏭️ Not run', ...notRunChecks.map(name => `• ${name}`)
                 ] : [])
               ] : ['', 'Check results unavailable. See the run logs for details.']),
               ...prs.flatMap(pr => ['', '🔀 Open pull request', pr.html_url])

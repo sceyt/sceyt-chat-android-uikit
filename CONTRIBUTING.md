@@ -63,6 +63,8 @@ python3 scripts/check_pr_coverage.py origin/dev
 
 Use the pull request's base branch in place of `origin/dev` when it differs. The coverage gate requires 80% coverage of added or modified executable Kotlin and Java library lines. Test and build artifacts appear in [Android CI](.github/CI_SETUP.md).
 
+On GitHub, **Kotlin Formatting** runs before **Unit tests** and **Instrumented tests** for pull requests. When formatting passes, both test jobs run in parallel. If formatting fails, both test jobs show **Skipped** and the required **All Tests** check blocks the merge.
+
 Android lint uses a checked-in baseline for existing UI Kit findings. Review any baseline changes separately from feature code.
 
 The `api/*.api` files in the library modules record the release AAR's JVM binary API. If a public change is intentional, run `:SceytChatUiKit:updateSdkAbi` or `:SceytChatConnection:updateSdkAbi`, review the generated diff, and commit the snapshot with the change.

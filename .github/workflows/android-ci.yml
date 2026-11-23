@@ -48,20 +48,13 @@ jobs:
   unit-tests:
     name: Unit tests
     needs: kotlin-formatting
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && (github.event_name == 'push' || needs.kotlin-formatting.result == 'success') }}
     env:
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
     steps:
-      # The required unit check must fail if its formatting prerequisite fails.
-      - name: Require Kotlin formatting to pass
-        if: github.event_name == 'pull_request' && needs.kotlin-formatting.result != 'success'
-        run: |
-          echo "::error::Kotlin formatting did not pass. JVM tests were skipped."
-          exit 1
-
       - name: Check out code
         uses: actions/checkout@v4
         with:
@@ -95,7 +88,7 @@ jobs:
         run: python3 scripts/check_pr_coverage.py "$BASE_SHA"
 
       - name: Upload unit test reports
-        if: always() && (github.event_name == 'push' || needs.kotlin-formatting.result == 'success')
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-reports
@@ -177,15 +170,20 @@ jobs:
 
   all-tests:
     name: All Tests
-    needs: [unit-tests, instrumented-tests]
+    needs: [kotlin-formatting, unit-tests, instrumented-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Verify required checks passed
         env:
+          FORMAT_RESULT: ${{ needs.kotlin-formatting.result }}
           UNIT_RESULT: ${{ needs.unit-tests.result }}
           DEVICE_RESULT: ${{ needs.instrumented-tests.result }}
         run: |
+          if [[ "$GITHUB_EVENT_NAME" == 'pull_request' && "$FORMAT_RESULT" != 'success' ]]; then
+            echo 'Kotlin formatting did not pass.'
+            exit 1
+          fi
           if [[ "$UNIT_RESULT" != 'success' || "$DEVICE_RESULT" != 'success' ]]; then
             echo 'One or more required checks did not pass.'
             exit 1
