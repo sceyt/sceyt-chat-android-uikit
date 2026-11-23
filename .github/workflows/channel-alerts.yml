@@ -72,9 +72,15 @@ jobs:
             const actor = run.triggering_actor?.login || run.actor?.login;
             const checkTitles = new Map([
               ['Check changed Kotlin formatting', 'Kotlin formatting'],
+              ['Require Kotlin formatting to pass', 'Kotlin formatting'],
               ['Check changed SDK line coverage', 'Changed-line coverage']
             ]);
-            const failureTitles = failedChecks.flatMap(job => {
+            const formattingFailed = failedChecks.some(job => job.name === 'Kotlin Formatting');
+            // The required unit check also fails when its formatting prerequisite fails.
+            const headlineChecks = formattingFailed
+              ? failedChecks.filter(job => job.name !== 'Unit tests')
+              : failedChecks;
+            const failureTitles = headlineChecks.flatMap(job => {
               const steps = (job.steps ?? [])
                 .filter(step => failedConclusions.includes(step.conclusion))
                 .map(step => checkTitles.get(step.name) ?? step.name);

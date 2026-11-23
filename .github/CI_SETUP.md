@@ -2,11 +2,13 @@
 
 Tracked under [WAAF-3507](https://waafi.atlassian.net/browse/WAAF-3507).
 
+On pull requests, **Kotlin Formatting** runs Spotless once. After it passes, the JVM and emulator jobs run in parallel. If the preflight fails, the test suites are skipped and **Unit tests** reports the failed prerequisite. On pushes, the test jobs run in parallel.
+
 The Android CI workflow runs on pushes and pull requests targeting `dev` and
 `main`. It cancels superseded runs and runs these checks:
 
 - **Unit tests**: the existing JVM test suite (`test`) and release
-  AAR builds for `SceytChatUiKit` and `SceytChatConnection`, Android lint, and ABI checks. Pull requests also run formatting and changed-line coverage. The job uploads the reports and both release libraries.
+  AAR builds for `SceytChatUiKit` and `SceytChatConnection`, Android lint, and ABI checks. Pull requests also run changed-line coverage. The job uploads the reports and both release libraries.
 - **Instrumented tests**: the existing connected test suite on an API 35 emulator,
   including benchmark smoke checks in dry-run mode. Uploads device test reports
   and benchmark reports.
