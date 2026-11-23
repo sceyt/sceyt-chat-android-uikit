@@ -57,7 +57,7 @@ jobs:
         run: ./gradlew --no-daemon "-PspotlessBase=$BASE_SHA" spotlessCheck
 
       - name: Run JVM tests, Android lint, and SDK ABI checks
-        run: ./gradlew --no-daemon test :SceytChatUiKit:assembleRelease :SceytChatConnection:assembleRelease checkSdk ${{ github.event_name == 'pull_request' && 'jacocoSdkReport' || '' }}
+        run: ./gradlew --no-daemon --warning-mode=all test :SceytChatUiKit:assembleRelease :SceytChatConnection:assembleRelease checkSdk ${{ github.event_name == 'pull_request' && 'jacocoSdkReport' || '' }}
 
       - name: Check changed SDK line coverage
         if: github.event_name == 'pull_request'
