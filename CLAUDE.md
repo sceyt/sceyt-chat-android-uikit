@@ -63,30 +63,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## 5. Project Facts
 
-Multi-module Android SDK, Kotlin, Gradle KTS. `rootProject.name = SceytCallSdk`.
-
-| Module | Purpose |
-|---|---|
-| `:callclient` | Core call client (WebRTC) |
-| `:audiorouting` | Audio device discovery + routing for VoIP calls |
-| `:toneplayer` | Call tones with audio focus, routing, reactive state |
-| `:app` | Demo app |
-| `:examples:audiorouting`, `:examples:toneplayer` | Per-module sample apps |
-
-Module docs: `audiorouting/README.md`, `toneplayer/README.md`.
-
-WebRTC is vendored with a local patch (`webrtc-patch/`) that adds the
-`AudioRecordDataCallback` mic-buffer hook screen-share device-audio depends on.
-Read that README before touching WebRTC or mic-capture code.
+See [AGENTS.md](AGENTS.md) for repository prerequisites and architecture references.
 
 ## 6. Verify Commands
 
-- Build: `./gradlew assembleDebug`
-- Unit tests, one module: `./gradlew :callclient:testDebugUnitTest`
-- Unit tests, all: `./gradlew testDebugUnitTest`
-- Coverage: jacoco configured in root `build.gradle.kts` for `:callclient`, `:audiorouting`, `:toneplayer`
-
-Never claim "done" without running the relevant test task.
+Run `./gradlew :SceytChatUiKit:testDebugUnitTest` for targeted JVM tests. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full check commands.
 
 ## 7. Public API Rules
 
@@ -102,7 +83,6 @@ where they conflict.
 
 - `local.properties`, `build/` dirs, `gradle/wrapper/`
 - Version bumps in `gradle.properties` or module `build.gradle.kts` — only when asked
-- `webrtc-patch/` — ask first
 
 ---
 

@@ -121,8 +121,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 @RunWith(RobolectricTestRunner::class)
-// Isolate the real service from other suites' FileTransferHelper singleton dependencies.
-@Config(instrumentedPackages = ["com.sceyt.chatuikit.persistence.workers"])
+// Isolate FileTransferHelper in a separate sandbox while keeping SDK bytecode usable by JaCoCo.
+@Config(instrumentedPackages = ["androidx.work"])
 @OptIn(ExperimentalCoroutinesApi::class)
 class UploadAndSendAttachmentWorkerTest {
     @get:Rule

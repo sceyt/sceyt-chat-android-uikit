@@ -1,4 +1,10 @@
-# Coding Guidelines
+# Sceyt Chat Android UI Kit
+
+Use JDK 17 and Android SDK 37.0. Read the [architecture guide](ARCHITECTURE.md) before changing module boundaries and the [file transfer guide](docs/file-transfer-architecture.md) before changing attachment behavior.
+
+Before committing, follow the [commit message rules](.github/git-commit-instructions.md). Use [CONTRIBUTING.md](CONTRIBUTING.md#repository-checks) for the exact checks and API snapshot commands.
+
+## Coding Guidelines
 
 These guidelines reduce common coding-agent mistakes: overcomplication, unnecessary refactors, hidden assumptions, and insufficient verification.
 
