@@ -15,7 +15,7 @@ object Config {
 
         //const val version = "2.1.6"
         // const val version = "local"
-        const val version = "2.1.60019-SNAPSHOT"
+        const val version = "2.1.60021-SNAPSHOT"
     }
 
     object ChatConnection {
@@ -27,6 +27,6 @@ object Config {
     }
 
     /** App version */
-    const val versionCode = 66
-    const val versionName = "1.3.3"
+    const val versionCode = 67
+    const val versionName = "1.3.4"
 }
