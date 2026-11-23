@@ -33,11 +33,9 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import org.robolectric.annotation.Config
 import kotlin.time.Duration.Companion.seconds
 
 @RunWith(RobolectricTestRunner::class)
-@Config(instrumentedPackages = ["com.sceyt.chatuikit"])
 @OptIn(ExperimentalCoroutinesApi::class)
 class SceytChatUIFacadeLogoutTest {
     private val workManager = mock<WorkManagerImpl>()

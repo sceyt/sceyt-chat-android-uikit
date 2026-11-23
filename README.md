@@ -162,6 +162,10 @@ If you are using Proguard with this library, make sure to add the following rule
 These rules will ensure that all classes in the specified packages and their sub-packages are not obfuscated by Proguard.
 
 
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, [ARCHITECTURE.md](ARCHITECTURE.md) for module boundaries, and [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ## License
 
 [MIT License](LICENSE).

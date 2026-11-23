@@ -7,6 +7,7 @@ Thank you for considering contributing to Sceyt Chat UI Kit! We welcome contribu
 - [How to Contribute](#how-to-contribute)
 - [Guidelines](#guidelines)
 - [Including a Changes.md File](#including-a-changesmd-file)
+- [Repository checks](#repository-checks)
 - [Opening an Issue](#opening-an-issue)
 - [Getting Help](#getting-help)
 
@@ -48,6 +49,25 @@ If you are making significant changes to the project, we recommend including a `
 - Any files that were removed
 
 This file will help the project maintainers understand your changes and make it easier to merge your pull request.
+
+## Repository checks
+
+Follow the [commit message rules](.github/git-commit-instructions.md). CI uses JDK 17 and Android SDK 37.0.
+
+```sh
+./gradlew -PspotlessBase=origin/dev spotlessCheck
+./gradlew test checkSdk jacocoSdkReport
+python3 -B -m unittest discover -s scripts
+python3 scripts/check_pr_coverage.py origin/dev
+```
+
+Use the pull request's base branch in place of `origin/dev` when it differs. The coverage gate requires 80% coverage of added or modified executable Kotlin and Java library lines. Test and build artifacts appear in [Android CI](.github/CI_SETUP.md).
+
+On GitHub, **Kotlin Formatting** runs before **Unit tests** and **Instrumented tests** for pull requests. When formatting passes, both test jobs run in parallel. If formatting fails, both test jobs show **Skipped** and the required **All Tests** check blocks the merge.
+
+Android lint uses a checked-in baseline for existing UI Kit findings. Review any baseline changes separately from feature code.
+
+The `api/*.api` files in the library modules record the release AAR's JVM binary API. If a public change is intentional, run `:SceytChatUiKit:updateSdkAbi` or `:SceytChatConnection:updateSdkAbi`, review the generated diff, and commit the snapshot with the change.
 
 ## Opening an Issue
 

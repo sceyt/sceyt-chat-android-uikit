@@ -1,4 +1,5 @@
 [versions]
+spotless = "8.12.0"
 appcompat = "1.8.0"
 benchmark = "1.5.0"
 constraintlayout = "2.2.2"
@@ -119,6 +120,7 @@ camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraX" 
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 
 [plugins]
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 benchmark = { id = "androidx.benchmark", version.ref = "benchmark" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
