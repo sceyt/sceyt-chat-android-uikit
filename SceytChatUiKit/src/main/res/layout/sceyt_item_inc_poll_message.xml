@@ -238,7 +238,7 @@
         android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="@id/layoutDetails"
         app:layout_constraintTop_toBottomOf="@+id/layoutDetails"

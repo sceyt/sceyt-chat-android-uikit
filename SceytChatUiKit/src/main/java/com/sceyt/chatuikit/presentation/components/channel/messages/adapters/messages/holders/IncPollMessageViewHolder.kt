@@ -95,7 +95,7 @@ class IncPollMessageViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val layoutBubbleConfig: Pair<ViewGroup, Boolean>?
+    override val layoutBubbleConfig: Pair<ViewGroup, Boolean>
         get() = Pair(binding.layoutDetails, false)
 
     override val incoming: Boolean
