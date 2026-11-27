@@ -27,6 +27,6 @@ object Config {
     }
 
     /** App version */
-    const val versionCode = 67
-    const val versionName = "1.3.4"
+    const val versionCode = 68
+    const val versionName = "1.3.5"
 }
