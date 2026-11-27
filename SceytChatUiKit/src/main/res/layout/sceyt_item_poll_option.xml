@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    android:contentDescription="@string/sceyt_cd_poll_option_item" xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clipChildren="false"
+    android:contentDescription="@string/sceyt_cd_poll_option_item"
     android:paddingVertical="10dp">
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/checkbox"
-        android:contentDescription="@string/sceyt_cd_poll_option"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:background="@null"
         android:clickable="false"
+        android:contentDescription="@string/sceyt_cd_poll_option"
         app:buttonCompat="@drawable/sceyt_custom_radiobutton_20"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvOptionText"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
+        android:includeFontPadding="false"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
-        android:includeFontPadding="false"
+        app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toStartOf="@+id/rvVoters"
         app:layout_constraintHeight_min="20dp"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/checkbox"
         app:layout_constraintTop_toTopOf="@+id/checkbox"
         app:layout_goneMarginStart="0dp"
@@ -37,10 +39,10 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvVoters"
-        android:contentDescription="@string/sceyt_cd_poll_option_voters_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="3dp"
+        android:contentDescription="@string/sceyt_cd_poll_option_voters_list"
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
@@ -54,9 +56,9 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.AnimatedCounterTextView
         android:id="@+id/tvVoteCount"
-        android:contentDescription="@string/sceyt_cd_poll_vote_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/sceyt_cd_poll_vote_count"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
